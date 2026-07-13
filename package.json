@@ -1,0 +1,75 @@
+{
+  "name": "junior-ignite",
+  "version": "0.1.0",
+  "description": "JuniorIgnite - Offline-first School Management System for Nursery and Primary Schools",
+  "author": "JuniorIgnite",
+  "license": "UNLICENSED",
+  "private": true,
+  "main": "out/main/index.js",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.node.json",
+    "build": "npm run typecheck && electron-vite build",
+    "start": "electron-vite preview",
+    "package": "npm run build && electron-builder",
+    "package:win": "npm run build && electron-builder --win",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "dependencies": {
+    "better-sqlite3-multiple-ciphers": "^11.9.1",
+    "bcryptjs": "^2.4.3",
+    "pdf-lib": "^1.17.1",
+    "qrcode": "^1.5.4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.28.0",
+    "zustand": "^4.5.5",
+    "i18next": "^23.16.4",
+    "react-i18next": "^14.1.3",
+    "recharts": "^2.13.3",
+    "lucide-react": "^0.462.0",
+    "clsx": "^2.1.1"
+  },
+  "devDependencies": {
+    "electron": "^33.2.0",
+    "electron-vite": "^2.3.0",
+    "electron-builder": "^25.1.8",
+    "vite": "^5.4.11",
+    "@vitejs/plugin-react": "^4.3.3",
+    "typescript": "^5.6.3",
+    "tailwindcss": "^3.4.14",
+    "postcss": "^8.4.47",
+    "autoprefixer": "^10.4.20",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@types/node": "^22.9.0",
+    "@types/qrcode": "^1.5.5",
+    "@types/bcryptjs": "^2.4.6"
+  },
+  "overrides": {
+    "node-gyp": "^13.0.1"
+  },
+  "build": {
+    "appId": "com.juniorignite.app",
+    "productName": "JuniorIgnite",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "out/**/*"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "build/icon.ico"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "build/icon.icns"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}
