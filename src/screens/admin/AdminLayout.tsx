@@ -11,6 +11,7 @@ import {
   NotebookPen,
   FileBadge,
   IdCard,
+  Camera,
   Wallet,
   ShieldCheck,
   DatabaseBackup,
@@ -29,6 +30,7 @@ import StudentsPage from './students/StudentsPage'
 import TeachersPage from './teachers/TeachersPage'
 import ClassesPage from './classes/ClassesPage'
 import SubjectsPage from './subjects/SubjectsPage'
+import StudentPhotosPage from './photos/StudentPhotosPage'
 import AdminAttendancePage from './attendance/AdminAttendancePage'
 import AdminMarksPage from './marks/AdminMarksPage'
 import ReportCardsPage from './reportcards/ReportCardsPage'
@@ -56,6 +58,7 @@ export default function AdminLayout(): JSX.Element {
   const items = [
     { to: '/admin/dashboard', label: t('common.dashboard'), icon: LayoutDashboard },
     { to: '/admin/students', label: t('common.students'), icon: Users },
+    { to: '/admin/photos', label: 'Student Photos', icon: Camera },
     { to: '/admin/teachers', label: t('common.teachers'), icon: GraduationCap },
     { to: '/admin/classes', label: t('common.classes'), icon: School2 },
     { to: '/admin/subjects', label: t('common.subjects'), icon: BookOpen },
@@ -108,6 +111,7 @@ export default function AdminLayout(): JSX.Element {
         <Routes>
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="students" element={<StudentsPage />} />
+          <Route path="photos" element={<StudentPhotosPage />} />
           <Route path="teachers" element={<TeachersPage />} />
           <Route path="classes" element={<ClassesPage />} />
           <Route path="subjects" element={<SubjectsPage />} />

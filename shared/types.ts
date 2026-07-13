@@ -57,6 +57,7 @@ export interface Subject {
   id: number
   name: string
   nameFr: string | null
+  assignedClasses: { classId: number; className: string; coefficient: number }[]
 }
 
 export interface ClassSubject {

@@ -116,7 +116,12 @@ export interface JuniorIgniteApi {
   }
   subjects: {
     list: () => Promise<ApiResult<Subject[]>>
-    create: (payload: { name: string; nameFr?: string }) => Promise<ApiResult<Subject>>
+    create: (payload: {
+      name: string
+      nameFr?: string
+      classId?: number
+      coefficient?: number
+    }) => Promise<ApiResult<Subject>>
     update: (payload: { id: number; name?: string; nameFr?: string }) => Promise<ApiResult<Subject>>
     delete: (payload: { id: number }) => Promise<ApiResult<null>>
   }
