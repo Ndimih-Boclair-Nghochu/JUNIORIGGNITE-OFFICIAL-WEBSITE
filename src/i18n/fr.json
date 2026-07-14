@@ -57,7 +57,13 @@
     "creating": "Configuration de votre école...",
     "doneTitle": "Tout est prêt !",
     "doneBody": "Des classes, élèves et un enseignant de démonstration ont été ajoutés pour explorer l'application. Les codes d'accès des classes sont affichés ci-dessous — notez-les, les enseignants en auront besoin.",
-    "goToApp": "Accéder à JuniorIgnite"
+    "goToApp": "Accéder à JuniorIgnite",
+    "haveAccount": "Vous avez déjà un compte ?",
+    "logIn": "Se connecter",
+    "loginTitle": "Content de vous revoir",
+    "loginSubtitle": "Connectez-vous à votre compte école",
+    "backToSetup": "Retour à la configuration",
+    "createNew": "Créer un nouveau compte école"
   },
   "landing": {
     "adminLogin": "Connexion administrateur",
@@ -74,7 +80,10 @@
     "offlineBadge": "Fonctionne hors-ligne",
     "secureBadge": "Sécurisé et privé",
     "yourClasses": "Vos classes",
-    "scrollHint": "Faites défiler"
+    "scrollHint": "Faites défiler",
+    "continue": "Continuer vers votre école",
+    "createAccount": "Créer votre compte école",
+    "welcomeHint": "Gérez votre école, entièrement hors-ligne."
   },
   "auth": {
     "username": "Nom d'utilisateur",

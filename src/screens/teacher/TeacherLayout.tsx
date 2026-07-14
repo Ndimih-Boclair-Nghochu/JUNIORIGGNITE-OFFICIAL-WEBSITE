@@ -1,8 +1,9 @@
 import { Routes, Route, useNavigate } from 'react-router-dom'
 import { ClipboardCheck, NotebookPen, Users, FileBadge, LogOut, School2 } from 'lucide-react'
 import { Sidebar } from '../../components/Sidebar'
-import { Logo } from '../../components/Logo'
+import { SchoolBadge } from '../../components/SchoolBadge'
 import { useAuthStore } from '../../store/authStore'
+import { useAppStore } from '../../store/appStore'
 import TeacherHome from './home/TeacherHome'
 import TeacherAttendancePage from './attendance/TeacherAttendancePage'
 import TeacherMarksPage from './marks/TeacherMarksPage'
@@ -13,6 +14,7 @@ export default function TeacherLayout(): JSX.Element {
   const navigate = useNavigate()
   const session = useAuthStore((s) => s.session)
   const logout = useAuthStore((s) => s.logout)
+  const school = useAppStore((s) => s.school)
   const className = session?.role === 'teacher' ? session.className : ''
 
   const items = [
@@ -34,10 +36,10 @@ export default function TeacherLayout(): JSX.Element {
         items={items}
         header={
           <div className="flex items-center gap-3 border-b border-slate-100 px-5 py-4">
-            <Logo className="h-9 w-9 shrink-0" />
+            <SchoolBadge school={school} className="h-9 w-9 shrink-0 text-sm" />
             <div className="min-w-0">
               <div className="truncate text-base font-bold text-slate-900">{className}</div>
-              <div className="text-xs text-slate-400">Teacher access</div>
+              <div className="truncate text-xs text-slate-400">{school?.name ?? 'Teacher access'}</div>
             </div>
           </div>
         }

@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ImagePlus, CheckCircle2, Loader2 } from 'lucide-react'
+import { ImagePlus, CheckCircle2, Loader2, LogIn } from 'lucide-react'
 import { Logo } from '../../components/Logo'
 import { useAppStore } from '../../store/appStore'
+import { useAuthStore } from '../../store/authStore'
 import i18n from '../../i18n'
 import type { Language } from '@shared/types'
 
@@ -43,11 +44,32 @@ const initialForm: FormState = {
 export default function SetupWizard(): JSX.Element {
   const { t } = useTranslation()
   const refreshApp = useAppStore((s) => s.refresh)
+  const adminLogin = useAuthStore((s) => s.adminLogin)
+  const [mode, setMode] = useState<'signup' | 'login'>('signup')
   const [step, setStep] = useState<Step>('school')
   const [form, setForm] = useState<FormState>(initialForm)
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [classCodes, setClassCodes] = useState<Record<string, string>>({})
+  // "Already have an account?" login state
+  const [loginUsername, setLoginUsername] = useState('')
+  const [loginPassword, setLoginPassword] = useState('')
+  const [loginError, setLoginError] = useState<string | null>(null)
+  const [loginSubmitting, setLoginSubmitting] = useState(false)
+
+  async function handleLogin(e: React.FormEvent): Promise<void> {
+    e.preventDefault()
+    setLoginSubmitting(true)
+    setLoginError(null)
+    const res = await adminLogin(loginUsername, loginPassword)
+    setLoginSubmitting(false)
+    if (!res.ok) {
+      setLoginError(t('auth.invalidCredentials'))
+      return
+    }
+    // Session is now active; refreshing the app store routes into the account.
+    await refreshApp()
+  }
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]): void {
     setForm((f) => ({ ...f, [key]: value }))
@@ -118,11 +140,57 @@ export default function SetupWizard(): JSX.Element {
           <div className="mb-1 text-lg font-extrabold tracking-tight text-slate-900">
             Junior<span className="text-brand-600">Ignite</span>
           </div>
-          <h1 className="text-2xl font-bold text-slate-900">{t('setup.title')}</h1>
-          <p className="mt-1 text-slate-500">{t('setup.subtitle')}</p>
+          <h1 className="text-2xl font-bold text-slate-900">
+            {mode === 'login' ? t('setup.loginTitle') : t('setup.title')}
+          </h1>
+          <p className="mt-1 text-slate-500">
+            {mode === 'login' ? t('setup.loginSubtitle') : t('setup.subtitle')}
+          </p>
         </div>
 
-        <div className="card">
+        {mode === 'login' ? (
+          <div className="card">
+            {loginError && (
+              <div className="mb-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{loginError}</div>
+            )}
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div>
+                <label className="label-field">{t('auth.username')}</label>
+                <input
+                  className="input-field"
+                  value={loginUsername}
+                  onChange={(e) => setLoginUsername(e.target.value)}
+                  autoFocus
+                />
+              </div>
+              <div>
+                <label className="label-field">{t('auth.password')}</label>
+                <input
+                  type="password"
+                  className="input-field"
+                  value={loginPassword}
+                  onChange={(e) => setLoginPassword(e.target.value)}
+                />
+              </div>
+              <button type="submit" className="btn-primary w-full" disabled={loginSubmitting}>
+                {loginSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogIn className="h-4 w-4" />}
+                {t('auth.signIn')}
+              </button>
+            </form>
+            <button
+              type="button"
+              onClick={() => {
+                setMode('signup')
+                setLoginError(null)
+              }}
+              className="mt-4 w-full text-center text-sm text-slate-500 hover:text-brand-600"
+            >
+              {t('setup.createNew')}
+            </button>
+          </div>
+        ) : (
+          <>
+          <div className="card">
           {step !== 'done' && (
             <div className="mb-6 flex items-center gap-2 text-sm font-medium text-slate-400">
               {(['school', 'admin', 'review'] as Step[]).map((s, i) => (
@@ -326,7 +394,19 @@ export default function SetupWizard(): JSX.Element {
               </button>
             </div>
           )}
-        </div>
+          </div>
+          {step !== 'done' && (
+            <button
+              type="button"
+              onClick={() => setMode('login')}
+              className="mt-5 w-full text-center text-sm text-slate-500 hover:text-brand-600"
+            >
+              {t('setup.haveAccount')}{' '}
+              <span className="font-semibold text-brand-600">{t('setup.logIn')}</span>
+            </button>
+          )}
+          </>
+        )}
       </div>
     </div>
   )

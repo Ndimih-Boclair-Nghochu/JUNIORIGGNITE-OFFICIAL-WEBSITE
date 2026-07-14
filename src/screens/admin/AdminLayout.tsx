@@ -23,7 +23,7 @@ import {
 } from 'lucide-react'
 import type { LicenseInfo } from '@shared/types'
 import { Sidebar } from '../../components/Sidebar'
-import { Logo } from '../../components/Logo'
+import { SchoolBadge } from '../../components/SchoolBadge'
 import { useAuthStore } from '../../store/authStore'
 import { useAppStore } from '../../store/appStore'
 import Dashboard from './dashboard/Dashboard'
@@ -86,9 +86,9 @@ export default function AdminLayout(): JSX.Element {
         items={items}
         header={
           <div className="flex items-center gap-3 border-b border-slate-100 px-5 py-4">
-            <Logo className="h-9 w-9 shrink-0" />
+            <SchoolBadge school={school} className="h-9 w-9 shrink-0 text-sm" />
             <div className="min-w-0">
-              <div className="truncate text-base font-bold text-slate-900">{school?.name ?? 'JuniorIgnite'}</div>
+              <div className="truncate text-base font-bold text-slate-900">{school?.name ?? 'School'}</div>
               <div className="text-xs text-slate-400">Administrator</div>
             </div>
           </div>

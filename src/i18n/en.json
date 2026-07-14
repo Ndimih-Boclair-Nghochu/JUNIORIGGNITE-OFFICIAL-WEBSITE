@@ -57,7 +57,13 @@
     "creating": "Setting up your school...",
     "doneTitle": "You're all set!",
     "doneBody": "Demo classes, students and a teacher have been added so you can explore the app right away. Class access codes are shown below — write them down, teachers will need them.",
-    "goToApp": "Go to JuniorIgnite"
+    "goToApp": "Go to JuniorIgnite",
+    "haveAccount": "Already have an account?",
+    "logIn": "Log in",
+    "loginTitle": "Welcome back",
+    "loginSubtitle": "Log in to your school account",
+    "backToSetup": "Back to account setup",
+    "createNew": "Create a new school account"
   },
   "landing": {
     "adminLogin": "Administrator login",
@@ -74,7 +80,10 @@
     "offlineBadge": "Works fully offline",
     "secureBadge": "Secure & private",
     "yourClasses": "Your classes",
-    "scrollHint": "Scroll to explore"
+    "scrollHint": "Scroll to explore",
+    "continue": "Continue to your school",
+    "createAccount": "Create your school account",
+    "welcomeHint": "Manage your school, fully offline."
   },
   "auth": {
     "username": "Username",

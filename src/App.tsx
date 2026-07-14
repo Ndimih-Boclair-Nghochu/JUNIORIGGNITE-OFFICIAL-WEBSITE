@@ -1,9 +1,10 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAppStore } from './store/appStore'
 import { useAuthStore } from './store/authStore'
 import { FullScreenSpinner } from './components/Spinner'
 import SetupWizard from './screens/setup-wizard/SetupWizard'
+import WelcomeLanding from './screens/landing/WelcomeLanding'
 import Landing from './screens/landing/Landing'
 import AdminLayout from './screens/admin/AdminLayout'
 import TeacherLayout from './screens/teacher/TeacherLayout'
@@ -24,6 +25,8 @@ export default function App(): JSX.Element {
   const { school, loading, refresh } = useAppStore()
   const refreshSession = useAuthStore((s) => s.refresh)
   const sessionLoading = useAuthStore((s) => s.loading)
+  const session = useAuthStore((s) => s.session)
+  const [entered, setEntered] = useState(false)
 
   useEffect(() => {
     refresh()
@@ -31,6 +34,12 @@ export default function App(): JSX.Element {
   }, [])
 
   if (loading || sessionLoading) return <FullScreenSpinner />
+
+  // JuniorIgnite welcome splash on every launch, before entering the account.
+  // Skipped when a session is already active (e.g. after login).
+  if (!entered && !session) {
+    return <WelcomeLanding hasAccount={!!school?.setupComplete} onEnter={() => setEntered(true)} />
+  }
 
   if (!school || !school.setupComplete) {
     return <SetupWizard />
