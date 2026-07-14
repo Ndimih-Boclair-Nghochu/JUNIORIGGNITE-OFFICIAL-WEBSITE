@@ -1,0 +1,22 @@
+node_modules/
+out/
+release/
+dist/
+*.log
+npm-debug.log*
+
+# app runtime data (never commit real school data)
+userData/
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+*.local
+
+# electron-vite transient compiled config
+electron.vite.config.*.mjs
