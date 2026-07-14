@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { LogIn, School, Users, KeyRound, Loader2 } from 'lucide-react'
+import { LogIn, Users, KeyRound, Loader2 } from 'lucide-react'
 import { useAppStore } from '../../store/appStore'
 import { useAuthStore } from '../../store/authStore'
+import { Logo } from '../../components/Logo'
 import { Modal } from '../../components/Modal'
 import { EmptyState } from '../../components/EmptyState'
 import type { SchoolClass } from '@shared/types'
@@ -38,9 +39,7 @@ export default function Landing(): JSX.Element {
               className="h-12 w-12 rounded-xl object-cover"
             />
           ) : (
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-600 text-white">
-              <School className="h-6 w-6" />
-            </div>
+            <Logo className="h-12 w-12" />
           )}
           <div>
             <h1 className="text-lg font-bold text-slate-900">{school?.name}</h1>

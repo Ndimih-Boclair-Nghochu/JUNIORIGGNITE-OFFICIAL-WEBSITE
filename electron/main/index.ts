@@ -15,6 +15,9 @@ function createWindow(): void {
     show: false,
     autoHideMenuBar: true,
     title: 'JuniorIgnite',
+    // In production the taskbar/exe icon comes from electron-builder (build/icon.ico);
+    // set it explicitly in dev so the window and taskbar show the brand mark too.
+    icon: !app.isPackaged ? path.join(process.cwd(), 'build', 'icon.png') : undefined,
     webPreferences: {
       preload: path.join(__dirname, '../preload/index.js'),
       contextIsolation: true,

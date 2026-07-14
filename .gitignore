@@ -17,3 +17,6 @@ Thumbs.db
 .vscode/*
 !.vscode/extensions.json
 *.local
+
+# electron-vite transient compiled config
+electron.vite.config.*.mjs

@@ -1,6 +1,7 @@
 import { Routes, Route, useNavigate } from 'react-router-dom'
 import { ClipboardCheck, NotebookPen, Users, FileBadge, LogOut, School2 } from 'lucide-react'
 import { Sidebar } from '../../components/Sidebar'
+import { Logo } from '../../components/Logo'
 import { useAuthStore } from '../../store/authStore'
 import TeacherHome from './home/TeacherHome'
 import TeacherAttendancePage from './attendance/TeacherAttendancePage'
@@ -32,9 +33,12 @@ export default function TeacherLayout(): JSX.Element {
       <Sidebar
         items={items}
         header={
-          <div className="border-b border-slate-100 px-5 py-5">
-            <div className="text-base font-bold text-slate-900">{className}</div>
-            <div className="text-xs text-slate-400">Teacher access</div>
+          <div className="flex items-center gap-3 border-b border-slate-100 px-5 py-4">
+            <Logo className="h-9 w-9 shrink-0" />
+            <div className="min-w-0">
+              <div className="truncate text-base font-bold text-slate-900">{className}</div>
+              <div className="text-xs text-slate-400">Teacher access</div>
+            </div>
           </div>
         }
         footer={

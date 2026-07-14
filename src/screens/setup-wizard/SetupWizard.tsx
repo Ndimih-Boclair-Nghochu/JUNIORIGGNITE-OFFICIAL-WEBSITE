@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { GraduationCap, ImagePlus, CheckCircle2, Loader2 } from 'lucide-react'
+import { ImagePlus, CheckCircle2, Loader2 } from 'lucide-react'
+import { Logo } from '../../components/Logo'
 import { useAppStore } from '../../store/appStore'
 import i18n from '../../i18n'
 import type { Language } from '@shared/types'
@@ -113,8 +114,9 @@ export default function SetupWizard(): JSX.Element {
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-brand-50 via-white to-accent-50 px-6 py-10">
       <div className="w-full max-w-2xl">
         <div className="mb-8 flex flex-col items-center text-center">
-          <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-600 text-white shadow-md">
-            <GraduationCap className="h-8 w-8" />
+          <Logo className="mb-2 h-16 w-16" />
+          <div className="mb-1 text-lg font-extrabold tracking-tight text-slate-900">
+            Junior<span className="text-brand-600">Ignite</span>
           </div>
           <h1 className="text-2xl font-bold text-slate-900">{t('setup.title')}</h1>
           <p className="mt-1 text-slate-500">{t('setup.subtitle')}</p>
