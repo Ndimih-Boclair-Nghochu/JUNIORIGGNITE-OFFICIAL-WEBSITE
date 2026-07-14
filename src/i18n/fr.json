@@ -65,7 +65,16 @@
     "accessCode": "Code d'accès",
     "enterCode": "Entrez le code d'accès de la classe",
     "noClasses": "Aucune classe n'a encore été créée.",
-    "welcomeBack": "Content de vous revoir"
+    "welcomeBack": "Content de vous revoir",
+    "haveAccount": "Vous avez déjà un compte ?",
+    "login": "Se connecter",
+    "tagline": "Éveiller les jeunes esprits",
+    "subtitle": "La plateforme hors-ligne complète pour gérer votre école maternelle et primaire — inscriptions, présence, notes, bulletins, cartes et frais, tout au même endroit.",
+    "browseClasses": "Voir les classes",
+    "offlineBadge": "Fonctionne hors-ligne",
+    "secureBadge": "Sécurisé et privé",
+    "yourClasses": "Vos classes",
+    "scrollHint": "Faites défiler"
   },
   "auth": {
     "username": "Nom d'utilisateur",

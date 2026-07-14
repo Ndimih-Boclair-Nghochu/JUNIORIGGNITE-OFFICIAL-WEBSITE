@@ -33,3 +33,134 @@
     @apply mb-1.5 block text-sm font-medium text-slate-600;
   }
 }
+
+/* ---- Landing / hero animations (pure CSS, offline-friendly) ---- */
+@keyframes ji-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-14px);
+  }
+}
+@keyframes ji-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(26px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes ji-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes ji-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  60% {
+    transform: scale(1.06);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes ji-glow {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.12);
+  }
+}
+@keyframes ji-orb-a {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(44px, -34px) scale(1.14);
+  }
+}
+@keyframes ji-orb-b {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(-40px, 30px) scale(1.1);
+  }
+}
+@keyframes ji-shimmer {
+  to {
+    background-position: 200% center;
+  }
+}
+@keyframes ji-bounce-down {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translateY(9px);
+    opacity: 1;
+  }
+}
+
+.animate-ji-float {
+  animation: ji-float 5.5s ease-in-out infinite;
+}
+.animate-ji-fade-up {
+  animation: ji-fade-up 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.animate-ji-fade-in {
+  animation: ji-fade-in 1s ease both;
+}
+.animate-ji-pop {
+  animation: ji-pop 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.animate-ji-glow {
+  animation: ji-glow 4.5s ease-in-out infinite;
+}
+.animate-ji-orb-a {
+  animation: ji-orb-a 18s ease-in-out infinite;
+}
+.animate-ji-orb-b {
+  animation: ji-orb-b 22s ease-in-out infinite;
+}
+.animate-ji-bounce-down {
+  animation: ji-bounce-down 1.7s ease-in-out infinite;
+}
+.ji-shimmer-text {
+  background-image: linear-gradient(100deg, #116846, #22a56a 30%, #f8850a 50%, #22a56a 70%, #116846);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: ji-shimmer 6s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-ji-float,
+  .animate-ji-glow,
+  .animate-ji-orb-a,
+  .animate-ji-orb-b,
+  .animate-ji-bounce-down,
+  .ji-shimmer-text {
+    animation: none !important;
+  }
+}

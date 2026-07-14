@@ -65,7 +65,16 @@
     "accessCode": "Access code",
     "enterCode": "Enter the class access code",
     "noClasses": "No classes have been created yet.",
-    "welcomeBack": "Welcome back"
+    "welcomeBack": "Welcome back",
+    "haveAccount": "Already have an account?",
+    "login": "Log in",
+    "tagline": "Igniting Young Minds",
+    "subtitle": "The complete offline platform to run your nursery & primary school — admissions, attendance, marks, report cards, ID cards and fees, all in one place.",
+    "browseClasses": "Browse classes",
+    "offlineBadge": "Works fully offline",
+    "secureBadge": "Secure & private",
+    "yourClasses": "Your classes",
+    "scrollHint": "Scroll to explore"
   },
   "auth": {
     "username": "Username",
