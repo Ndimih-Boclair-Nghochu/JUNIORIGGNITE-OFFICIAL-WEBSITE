@@ -173,6 +173,9 @@ export interface JuniorIgniteApi {
   idCards: {
     generate: (payload: { studentId: number; format: 'paper' | 'pvc' }) => Promise<ApiResult<{ path: string }>>
   }
+  studentProfiles: {
+    generate: (payload: { studentId: number }) => Promise<ApiResult<{ path: string }>>
+  }
   fees: {
     listStructures: (payload: { termId: number }) => Promise<ApiResult<FeeStructure[]>>
     saveStructure: (payload: {
