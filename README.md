@@ -1,81 +1,78 @@
-# JuniorIgnite — Official Website (Frontend)
+# JuniorIgnite — Monorepo
 
-The public marketing & download site and the **Founder console** for
-[JuniorIgnite](https://github.com/Ndimih-Boclair-Nghochu/JUNIORIGGNITE), the
-offline-first school management system for nursery & primary schools in Cameroon.
+Everything for **JuniorIgnite**, the offline-first school management system for
+nursery & primary schools in Cameroon, in one repository:
 
-This repository contains **only the frontend**. The backend API lives in the
-desktop app repository (`JUNIORIGGNITE/server`) because it is directly tied to
-the desktop application's data and licensing.
+```
+.                     ← Official website (React + Vite frontend) + Founder console
+├── desktop/          ← The JuniorIgnite desktop app (Electron + React + SQLite)
+└── server/           ← Backend API (Express) powering the website & founder console
+```
 
-## What's inside
+Each part is independent — its own `package.json`, its own install and run.
 
-**Public site** (3 pages, fully responsive):
+---
 
-- **Home** — hero, live download/school/student stats, feature grid, "how it
-  works", an embedded YouTube video guide, a prominent **Download** section, and
-  a downloadable **setup guide (PDF)**.
-- **About** — mission, values, who it's for.
-- **Contact** — contact details + a working contact form.
+## 1. Website (repository root)
 
-**Founder console** (`/founder`) — private dashboard for the founder:
+The public marketing & download site and the private **Founder console**.
 
-- Total downloads, schools onboard, active users and students managed.
-- Charts: downloads over time, schools by region.
-- A school-accounts table to **grant/revoke report-card generation**, and to
-  **suspend/activate** any school account.
-
-## Tech stack
-
-React 18 · TypeScript · Vite · Tailwind CSS · React Router · Recharts · lucide-react.
-
-## Run locally
+- **Public site** (responsive): Home (hero, live stats, features, how-it-works,
+  embedded YouTube guide, prominent Download + downloadable setup guide PDF),
+  About, and Contact (with a working form).
+- **Founder console** (`/founder`): downloads / schools / users / students
+  stats, charts, and a school-accounts table to grant/revoke report-card
+  generation and suspend/activate accounts.
 
 ```bash
 npm install
-npm run dev        # http://localhost:5180
+npm run dev          # http://localhost:5180
 ```
 
-The site runs **standalone in demo mode** with seeded sample data, so you can
-review everything without the backend. Demo founder login:
+Runs standalone in demo mode (seeded data). Demo founder login:
+`founder@juniorignite.app` / `founder123`. To use the real backend, copy
+`.env.example` to `.env` and set `VITE_API_BASE_URL` (default
+`http://localhost:4000`). See [`src/lib/api.ts`](src/lib/api.ts) for the
+endpoints used.
 
-```
-founder@juniorignite.app  /  founder123
-```
+## 2. Desktop app — [`desktop/`](desktop/)
 
-To connect the real backend, copy `.env.example` to `.env` and set
-`VITE_API_BASE_URL` to your running API (default `http://localhost:4000`), then
-start the server from the desktop app repo (`JUNIORIGGNITE/server`).
-
-## Build
+The installable Electron application schools run offline. Full details,
+architecture and build/packaging instructions are in
+[`desktop/README.md`](desktop/README.md).
 
 ```bash
-npm run build      # outputs to dist/
-npm run preview
+cd desktop
+npm install
+npm run dev          # develop
+npm run package:win  # build the Windows installer (release/JuniorIgnite Setup <version>.exe)
 ```
 
-`dist/` is a static bundle — deploy it to any static host (Netlify, Vercel,
-GitHub Pages, S3, …).
+## 3. Backend API — [`server/`](server/)
 
-## How the frontend talks to the backend
+Express API that serves the website's public stats, records downloads, handles
+the contact form, ingests telemetry from desktop installations, and powers the
+founder console (auth, aggregate stats, and per-school permission control —
+including remotely granting a school permission to generate report cards).
 
-All API access goes through [`src/lib/api.ts`](src/lib/api.ts). Every call tries
-the live backend first and **falls back to seeded demo data**
-([`src/lib/mock.ts`](src/lib/mock.ts)) if the server is unreachable, so the site
-is always explorable. Endpoints used:
+```bash
+cd server
+cp .env.example .env
+npm install
+npm run dev          # http://localhost:4000
+```
 
-| Purpose | Endpoint |
-| --- | --- |
-| Public stats (home) | `GET /api/stats/public` |
-| Record a download | `POST /api/download` |
-| Contact form | `POST /api/contact` |
-| Founder login | `POST /api/founder/login` |
-| Founder overview | `GET /api/founder/overview` |
-| List schools | `GET /api/founder/schools` |
-| Update a school (permissions/status) | `PATCH /api/founder/schools/:id` |
+> The server is the cloud counterpart of the desktop app's sync/licensing
+> stubs. It is deliberately storage-light so it can be deployed anywhere.
 
-## Configuration
+---
 
-Edit [`src/lib/config.ts`](src/lib/config.ts) to change the YouTube video id,
-version/size shown on the download button, and contact details without touching
-components.
+## How the pieces fit together
+
+- Schools **download** the desktop app from the website and run it fully
+  **offline**.
+- When online, the desktop app can report anonymous **telemetry** (school
+  registered, student counts, usage) to the **backend**.
+- The **founder** signs in to the website's console to see platform-wide numbers
+  and to **manage school accounts** — e.g. granting a school permission to
+  generate report cards, which the desktop app honours on its next sync.
