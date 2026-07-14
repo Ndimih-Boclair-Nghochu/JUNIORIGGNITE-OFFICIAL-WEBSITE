@@ -83,7 +83,8 @@
     "scrollHint": "Faites défiler",
     "continue": "Continuer vers votre école",
     "createAccount": "Créer votre compte école",
-    "welcomeHint": "Gérez votre école, entièrement hors-ligne."
+    "welcomeHint": "Gérez votre école, entièrement hors-ligne.",
+    "preparing": "Préparation de votre école…"
   },
   "auth": {
     "username": "Nom d'utilisateur",

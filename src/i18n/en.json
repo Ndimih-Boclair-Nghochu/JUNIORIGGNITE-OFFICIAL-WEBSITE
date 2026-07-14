@@ -83,7 +83,8 @@
     "scrollHint": "Scroll to explore",
     "continue": "Continue to your school",
     "createAccount": "Create your school account",
-    "welcomeHint": "Manage your school, fully offline."
+    "welcomeHint": "Manage your school, fully offline.",
+    "preparing": "Preparing your school…"
   },
   "auth": {
     "username": "Username",
