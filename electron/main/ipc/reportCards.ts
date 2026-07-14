@@ -7,6 +7,7 @@ import { logActivity } from '../services/activityLog'
 import { assertNotReadOnly } from '../services/license'
 import { generateReportCard } from '../services/pdf/reportCard'
 import { generateIdCard, type IdCardFormat } from '../services/pdf/idCard'
+import { generateStudentProfile } from '../services/pdf/studentProfile'
 
 export function registerReportCardHandlers(): void {
   ipcMain.handle(
@@ -54,6 +55,29 @@ export function registerReportCardHandlers(): void {
           actorType: session.role,
           actorLabel: session.role === 'admin' ? session.username : session.className,
           action: 'Generated ID card',
+          entityType: 'student',
+          entityId: studentId
+        })
+        return { ok: true, data: { path } }
+      } catch (err: any) {
+        return { ok: false, error: err.message }
+      }
+    }
+  )
+
+  ipcMain.handle(
+    IPC.STUDENT_PROFILE_GENERATE,
+    async (_e, { studentId }: { studentId: number }): Promise<ApiResult<{ path: string }>> => {
+      try {
+        const session = sessionManager.requireAdmin()
+        assertNotReadOnly()
+        const db = getDb()
+        const path = await generateStudentProfile(db, studentId)
+        await shell.openPath(path)
+        logActivity({
+          actorType: 'admin',
+          actorLabel: session.username,
+          action: 'Generated student profile',
           entityType: 'student',
           entityId: studentId
         })

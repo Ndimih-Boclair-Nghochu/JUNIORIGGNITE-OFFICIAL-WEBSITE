@@ -99,6 +99,9 @@ const api = {
   idCards: {
     generate: (payload: unknown) => invoke(IPC.ID_CARD_GENERATE, payload)
   },
+  studentProfiles: {
+    generate: (payload: unknown) => invoke(IPC.STUDENT_PROFILE_GENERATE, payload)
+  },
   fees: {
     listStructures: (payload: unknown) => invoke(IPC.FEES_LIST_STRUCTURES, payload),
     saveStructure: (payload: unknown) => invoke(IPC.FEES_SAVE_STRUCTURE, payload),

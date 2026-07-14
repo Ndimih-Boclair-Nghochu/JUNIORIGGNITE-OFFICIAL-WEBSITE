@@ -12,6 +12,7 @@ import {
   FileBadge,
   IdCard,
   Camera,
+  BookMarked,
   Wallet,
   ShieldCheck,
   DatabaseBackup,
@@ -32,6 +33,7 @@ import TeachersPage from './teachers/TeachersPage'
 import ClassesPage from './classes/ClassesPage'
 import SubjectsPage from './subjects/SubjectsPage'
 import StudentPhotosPage from './photos/StudentPhotosPage'
+import StudentProfilePage from './profile/StudentProfilePage'
 import AdminAttendancePage from './attendance/AdminAttendancePage'
 import AdminMarksPage from './marks/AdminMarksPage'
 import ReportCardsPage from './reportcards/ReportCardsPage'
@@ -66,6 +68,7 @@ export default function AdminLayout(): JSX.Element {
     { to: '/admin/attendance', label: 'Attendance', icon: ClipboardCheck },
     { to: '/admin/marks', label: 'Marks', icon: NotebookPen },
     { to: '/admin/report-cards', label: 'Report Cards', icon: FileBadge },
+    { to: '/admin/student-profiles', label: 'Student Profiles', icon: BookMarked },
     { to: '/admin/id-cards', label: 'ID Cards', icon: IdCard },
     { to: '/admin/fees', label: 'Fees', icon: Wallet },
     { to: '/admin/license', label: 'License', icon: ShieldCheck },
@@ -122,6 +125,7 @@ export default function AdminLayout(): JSX.Element {
           <Route path="attendance" element={<AdminAttendancePage />} />
           <Route path="marks" element={<AdminMarksPage />} />
           <Route path="report-cards" element={<ReportCardsPage />} />
+          <Route path="student-profiles" element={<StudentProfilePage />} />
           <Route path="id-cards" element={<IdCardsPage />} />
           <Route path="fees" element={<FeesPage />} />
           <Route path="license" element={<LicensePage />} />

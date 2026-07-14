@@ -73,6 +73,9 @@ export const IPC = {
   // ID cards
   ID_CARD_GENERATE: 'idCard:generate',
 
+  // Student profile (report-card cover)
+  STUDENT_PROFILE_GENERATE: 'studentProfile:generate',
+
   // Fees
   FEES_LIST_STRUCTURES: 'fees:listStructures',
   FEES_SAVE_STRUCTURE: 'fees:saveStructure',

@@ -17,6 +17,9 @@ function mapSchool(row: any): School {
     region: row.region,
     division: row.division,
     subdivision: row.subdivision,
+    poBox: row.po_box ?? null,
+    villageTown: row.village_town ?? null,
+    aboutText: row.about_text ?? null,
     language: row.language,
     currentAcademicYearId: row.current_academic_year_id,
     currentTermId: row.current_term_id,
@@ -50,11 +53,15 @@ export function registerSettingsHandlers(): void {
         region: patch.region ?? current.region,
         division: patch.division ?? current.division,
         subdivision: patch.subdivision ?? current.subdivision,
+        po_box: patch.poBox ?? current.po_box,
+        village_town: patch.villageTown ?? current.village_town,
+        about_text: patch.aboutText ?? current.about_text,
         language: patch.language ?? current.language
       }
       db.prepare(
         `UPDATE schools SET name=@name, logo_path=@logo_path, motto=@motto, address=@address, phone=@phone,
-         email=@email, region=@region, division=@division, subdivision=@subdivision, language=@language WHERE id = 1`
+         email=@email, region=@region, division=@division, subdivision=@subdivision,
+         po_box=@po_box, village_town=@village_town, about_text=@about_text, language=@language WHERE id = 1`
       ).run(merged)
       logActivity({ actorType: 'admin', actorLabel: session.username, action: 'Updated school settings' })
       const row = db.prepare('SELECT * FROM schools WHERE id = 1').get()

@@ -21,6 +21,9 @@ export interface School {
   region: string | null
   division: string | null
   subdivision: string | null
+  poBox: string | null
+  villageTown: string | null
+  aboutText: string | null
   language: Language
   currentAcademicYearId: number | null
   currentTermId: number | null
