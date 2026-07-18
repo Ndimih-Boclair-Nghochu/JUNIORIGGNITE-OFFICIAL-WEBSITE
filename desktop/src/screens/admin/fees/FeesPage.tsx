@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
-import { Wallet, Loader2, Receipt, Plus, Settings2 } from 'lucide-react'
+import { Wallet, Loader2, Receipt, Plus, Settings2, Tags, Trash2 } from 'lucide-react'
 import { EmptyState } from '../../../components/EmptyState'
 import { Modal } from '../../../components/Modal'
-import type { SchoolClass, Term, FeeMethod } from '@shared/types'
+import type { SchoolClass, Term, FeeMethod, FeeType } from '@shared/types'
 
 interface FeeRow {
   studentId: number
@@ -27,6 +27,17 @@ export default function FeesPage(): JSX.Element {
   const [loading, setLoading] = useState(false)
   const [payFor, setPayFor] = useState<FeeRow | null>(null)
   const [structureFor, setStructureFor] = useState(false)
+  const [feeTypes, setFeeTypes] = useState<FeeType[]>([])
+  const [managingTypes, setManagingTypes] = useState(false)
+
+  async function loadFeeTypes(): Promise<void> {
+    const res = await window.api.feeTypes.list()
+    if (res.ok) setFeeTypes(res.data ?? [])
+  }
+
+  useEffect(() => {
+    loadFeeTypes()
+  }, [])
 
   useEffect(() => {
     ;(async () => {
@@ -61,6 +72,10 @@ export default function FeesPage(): JSX.Element {
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold text-slate-900">Fee Management</h1>
         <div className="flex gap-3">
+          <button className="btn-secondary" onClick={() => setManagingTypes(true)}>
+            <Tags className="h-4 w-4" />
+            Fee types
+          </button>
           <button className="btn-secondary" onClick={() => setStructureFor(true)}>
             <Settings2 className="h-4 w-4" />
             Fee structure
@@ -148,6 +163,7 @@ export default function FeesPage(): JSX.Element {
         <PaymentModal
           row={payFor}
           termId={termId}
+          feeTypes={feeTypes}
           onClose={() => setPayFor(null)}
           onDone={() => {
             setPayFor(null)
@@ -158,6 +174,9 @@ export default function FeesPage(): JSX.Element {
       {structureFor && termId && (
         <StructureModal classes={classes} termId={termId} onClose={() => setStructureFor(false)} onDone={() => { setStructureFor(false); load() }} />
       )}
+      {managingTypes && (
+        <FeeTypesModal feeTypes={feeTypes} onClose={() => setManagingTypes(false)} onChanged={loadFeeTypes} />
+      )}
     </div>
   )
 }
@@ -165,25 +184,40 @@ export default function FeesPage(): JSX.Element {
 function PaymentModal({
   row,
   termId,
+  feeTypes,
   onClose,
   onDone
 }: {
   row: FeeRow
   termId: number
+  feeTypes: FeeType[]
   onClose: () => void
   onDone: () => void
 }): JSX.Element {
-  const [amount, setAmount] = useState<number>(row.balance || 0)
+  // Once the school defines fee types, one must be chosen before recording; the
+  // chosen type's amount pre-fills the payment (still editable for part-payments).
+  const [feeTypeId, setFeeTypeId] = useState<number | null>(feeTypes[0]?.id ?? null)
+  const [amount, setAmount] = useState<number>(feeTypes[0]?.amount || row.balance || 0)
   const [method, setMethod] = useState<FeeMethod>('momo')
   const [reference, setReference] = useState('')
+
+  function handleFeeTypeChange(id: number | null): void {
+    setFeeTypeId(id)
+    const picked = feeTypes.find((t) => t.id === id)
+    if (picked && picked.amount > 0) setAmount(picked.amount)
+  }
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   async function handleSubmit(e: React.FormEvent): Promise<void> {
     e.preventDefault()
+    if (feeTypes.length > 0 && !feeTypeId) {
+      setError('Select the type of fee being paid.')
+      return
+    }
     setSaving(true)
     setError(null)
-    const res = await window.api.fees.recordPayment({ studentId: row.studentId, termId, amount, method, reference })
+    const res = await window.api.fees.recordPayment({ studentId: row.studentId, termId, amount, method, reference, feeTypeId })
     if (!res.ok) {
       setSaving(false)
       return setError(res.error ?? 'Failed to record payment.')
@@ -201,6 +235,24 @@ function PaymentModal({
         <div className="rounded-xl bg-slate-50 p-3 text-sm text-slate-500">
           Balance: <span className="font-semibold text-slate-800">{fmt(row.balance)} FCFA</span>
         </div>
+        {feeTypes.length > 0 && (
+          <div>
+            <label className="label-field">Fee type</label>
+            <select
+              className="input-field"
+              value={feeTypeId ?? ''}
+              onChange={(e) => handleFeeTypeChange(e.target.value ? Number(e.target.value) : null)}
+              required
+            >
+              <option value="">Select a fee type…</option>
+              {feeTypes.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name} — {fmt(t.amount)} FCFA
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
         <div>
           <label className="label-field">Amount (FCFA) — supports partial / installment</label>
           <input type="number" min={0} className="input-field" value={amount} onChange={(e) => setAmount(Number(e.target.value))} required />
@@ -295,6 +347,115 @@ function StructureModal({
           <button className="btn-primary" onClick={handleSave} disabled={saving}>
             {saving && <Loader2 className="h-4 w-4 animate-spin" />}
             Save
+          </button>
+        </div>
+      </div>
+    </Modal>
+  )
+}
+
+/**
+ * Manage the school's fee categories (Tuition, Exam Fees, PTA, …). Once at least
+ * one exists, recording a payment requires choosing one.
+ */
+function FeeTypesModal({
+  feeTypes,
+  onClose,
+  onChanged
+}: {
+  feeTypes: FeeType[]
+  onClose: () => void
+  onChanged: () => void
+}): JSX.Element {
+  const [name, setName] = useState('')
+  const [amount, setAmount] = useState<number>(0)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  async function handleAdd(e: React.FormEvent): Promise<void> {
+    e.preventDefault()
+    const trimmed = name.trim()
+    if (!trimmed) return
+    setSaving(true)
+    setError(null)
+    const res = await window.api.feeTypes.create({ name: trimmed, amount })
+    setSaving(false)
+    if (!res.ok) return setError(res.error ?? 'Failed to add fee type.')
+    setName('')
+    setAmount(0)
+    onChanged()
+  }
+
+  async function handleDelete(t: FeeType): Promise<void> {
+    if (!confirm(`Delete the fee type "${t.name}"?`)) return
+    const res = await window.api.feeTypes.delete({ id: t.id })
+    if (!res.ok) return setError(res.error ?? 'Failed to delete fee type.')
+    setError(null)
+    onChanged()
+  }
+
+  return (
+    <Modal title="Fee types" onClose={onClose} widthClassName="max-w-lg">
+      <div className="space-y-4">
+        {error && <div className="rounded-xl bg-red-50 px-4 py-2.5 text-sm text-red-700">{error}</div>}
+
+        <form onSubmit={handleAdd} className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="label-field">Fee name</label>
+              <input
+                className="input-field"
+                placeholder="e.g. Exam Fees"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="label-field">Amount (FCFA)</label>
+              <input
+                type="number"
+                min={0}
+                className="input-field"
+                placeholder="e.g. 5000"
+                value={amount}
+                onChange={(e) => setAmount(Number(e.target.value))}
+              />
+            </div>
+          </div>
+          <button type="submit" className="btn-primary w-full" disabled={saving || !name.trim()}>
+            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+            Add fee type
+          </button>
+        </form>
+
+        {feeTypes.length === 0 ? (
+          <p className="rounded-xl bg-slate-50 px-4 py-3 text-sm text-slate-500">
+            No fee types yet. Add one (for example “Tuition” or “Exam Fees”) and you'll be asked to pick a type each time
+            you record a payment.
+          </p>
+        ) : (
+          <div className="divide-y divide-slate-100 rounded-xl border border-slate-200">
+            {feeTypes.map((t) => (
+              <div key={t.id} className="flex items-center justify-between px-4 py-2.5">
+                <div>
+                  <span className="font-medium text-slate-800">{t.name}</span>
+                  <span className="ml-2 text-sm text-slate-500">{fmt(t.amount)} FCFA</span>
+                </div>
+                <button
+                  className="rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600"
+                  onClick={() => handleDelete(t)}
+                  title="Delete fee type"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="flex justify-end">
+          <button className="btn-secondary" onClick={onClose}>
+            Done
           </button>
         </div>
       </div>

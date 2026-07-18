@@ -6,6 +6,7 @@ export const IPC = {
   APP_GET_STATE: 'app:getState',
   APP_FIRST_RUN_SETUP: 'app:firstRunSetup',
   APP_INTEGRITY_STATUS: 'app:integrityStatus',
+  APP_QUIT: 'app:quit',
 
   // Auth / session
   AUTH_ADMIN_LOGIN: 'auth:adminLogin',
@@ -69,6 +70,7 @@ export const IPC = {
   REPORT_CARD_META_GET: 'reportCard:metaGet',
   REPORT_CARD_META_SAVE: 'reportCard:metaSave',
   REPORT_CARD_GENERATE: 'reportCard:generate',
+  REPORT_CARD_GENERATE_CLASS: 'reportCard:generateClass',
 
   // ID cards
   ID_CARD_GENERATE: 'idCard:generate',
@@ -83,19 +85,31 @@ export const IPC = {
   FEES_RECORD_PAYMENT: 'fees:recordPayment',
   FEES_BALANCE: 'fees:balance',
   FEES_GENERATE_RECEIPT: 'fees:generateReceipt',
+  FEE_TYPES_LIST: 'feeTypes:list',
+  FEE_TYPES_CREATE: 'feeTypes:create',
+  FEE_TYPES_DELETE: 'feeTypes:delete',
+
+  // Class levels (promotion ladder)
+  CLASS_LEVELS_LIST: 'classLevels:list',
+  CLASS_LEVELS_CREATE: 'classLevels:create',
+  CLASS_LEVELS_UPDATE: 'classLevels:update',
+  CLASS_LEVELS_DELETE: 'classLevels:delete',
+
+  // Promotion
+  PROMOTION_PREVIEW: 'promotion:preview',
+  PROMOTION_RUN: 'promotion:run',
 
   // License
   LICENSE_STATUS: 'license:status',
-  LICENSE_RENEW: 'license:renew',
+  LICENSE_ACTIVATE: 'license:activate',
+  LICENSE_REGISTRATION_INFO: 'license:registrationInfo',
+  LICENSE_STARTUP_NOTICES: 'license:startupNotices',
+  LICENSE_DISMISS_UPDATE: 'license:dismissUpdate',
 
-  // Backup / sync
+  // Backup
   BACKUP_CREATE: 'backup:create',
   BACKUP_LIST: 'backup:list',
   BACKUP_RESTORE: 'backup:restore',
-  SYNC_RUN: 'sync:run',
-  SYNC_LIST_CONFLICTS: 'sync:listConflicts',
-  SYNC_RESOLVE_CONFLICT: 'sync:resolveConflict',
-  SYNC_SIMULATE_CONFLICT: 'sync:simulateConflict',
 
   // Settings / activity log
   SETTINGS_GET: 'settings:get',

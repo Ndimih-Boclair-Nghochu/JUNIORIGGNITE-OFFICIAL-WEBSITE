@@ -12,7 +12,8 @@ const api = {
   app: {
     getState: () => invoke(IPC.APP_GET_STATE),
     firstRunSetup: (payload: unknown) => invoke(IPC.APP_FIRST_RUN_SETUP, payload),
-    integrityStatus: () => invoke(IPC.APP_INTEGRITY_STATUS)
+    integrityStatus: () => invoke(IPC.APP_INTEGRITY_STATUS),
+    quit: () => invoke(IPC.APP_QUIT)
   },
   auth: {
     adminLogin: (payload: { username: string; password: string }) => invoke(IPC.AUTH_ADMIN_LOGIN, payload),
@@ -94,7 +95,8 @@ const api = {
     save: (payload: unknown) => invoke(IPC.REPORT_CARD_META_SAVE, payload)
   },
   reportCards: {
-    generate: (payload: unknown) => invoke(IPC.REPORT_CARD_GENERATE, payload)
+    generate: (payload: unknown) => invoke(IPC.REPORT_CARD_GENERATE, payload),
+    generateClass: (payload: unknown) => invoke(IPC.REPORT_CARD_GENERATE_CLASS, payload)
   },
   idCards: {
     generate: (payload: unknown) => invoke(IPC.ID_CARD_GENERATE, payload)
@@ -110,20 +112,32 @@ const api = {
     balance: (payload: unknown) => invoke(IPC.FEES_BALANCE, payload),
     generateReceipt: (payload: unknown) => invoke(IPC.FEES_GENERATE_RECEIPT, payload)
   },
+  feeTypes: {
+    list: () => invoke(IPC.FEE_TYPES_LIST),
+    create: (payload: unknown) => invoke(IPC.FEE_TYPES_CREATE, payload),
+    delete: (payload: unknown) => invoke(IPC.FEE_TYPES_DELETE, payload)
+  },
+  classLevels: {
+    list: () => invoke(IPC.CLASS_LEVELS_LIST),
+    create: (payload: unknown) => invoke(IPC.CLASS_LEVELS_CREATE, payload),
+    update: (payload: unknown) => invoke(IPC.CLASS_LEVELS_UPDATE, payload),
+    delete: (payload: unknown) => invoke(IPC.CLASS_LEVELS_DELETE, payload)
+  },
+  promotion: {
+    preview: (payload: unknown) => invoke(IPC.PROMOTION_PREVIEW, payload),
+    run: (payload: unknown) => invoke(IPC.PROMOTION_RUN, payload)
+  },
   license: {
     status: () => invoke(IPC.LICENSE_STATUS),
-    renew: () => invoke(IPC.LICENSE_RENEW)
+    activate: (payload: { code: string }) => invoke(IPC.LICENSE_ACTIVATE, payload),
+    registrationInfo: () => invoke(IPC.LICENSE_REGISTRATION_INFO),
+    startupNotices: () => invoke(IPC.LICENSE_STARTUP_NOTICES),
+    dismissUpdate: (payload: { kind: 'monthly' | 'annual' }) => invoke(IPC.LICENSE_DISMISS_UPDATE, payload)
   },
   backup: {
     create: () => invoke(IPC.BACKUP_CREATE),
     list: () => invoke(IPC.BACKUP_LIST),
     restore: () => invoke(IPC.BACKUP_RESTORE)
-  },
-  sync: {
-    run: () => invoke(IPC.SYNC_RUN),
-    listConflicts: () => invoke(IPC.SYNC_LIST_CONFLICTS),
-    resolveConflict: (payload: unknown) => invoke(IPC.SYNC_RESOLVE_CONFLICT, payload),
-    simulateConflict: () => invoke(IPC.SYNC_SIMULATE_CONFLICT)
   }
 } satisfies JuniorIgniteApi
 

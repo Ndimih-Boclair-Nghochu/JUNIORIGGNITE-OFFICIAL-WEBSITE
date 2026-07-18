@@ -1,4 +1,5 @@
 import { ipcMain, shell } from 'electron'
+import path from 'node:path'
 import { IPC } from '@shared/ipcChannels'
 import type { ApiResult } from '@shared/types'
 import { getDb } from '../db/connection'
@@ -32,6 +33,54 @@ export function registerReportCardHandlers(): void {
           entityId: studentId
         })
         return { ok: true, data: { path } }
+      } catch (err: any) {
+        return { ok: false, error: err.message }
+      }
+    }
+  )
+
+  // Generate a report card for EVERY student in a class at once — one A5 PDF per
+  // student, each saved separately. Students without computed results are skipped
+  // rather than aborting the whole batch. Opens the exports folder when done.
+  ipcMain.handle(
+    IPC.REPORT_CARD_GENERATE_CLASS,
+    async (_e, { classId, termId }: { classId: number; termId: number }): Promise<ApiResult<{ count: number; dir: string }>> => {
+      try {
+        sessionManager.requireAdminOrClassScope(classId)
+        assertNotReadOnly()
+        const db = getDb()
+
+        const students = db
+          .prepare(
+            "SELECT id FROM students WHERE class_id = ? AND status NOT IN ('withdrawn','graduated','transferred') ORDER BY last_name, first_name"
+          )
+          .all(classId) as { id: number }[]
+        if (students.length === 0) return { ok: false, error: 'No students in this class.' }
+
+        let count = 0
+        let lastPath = ''
+        for (const s of students) {
+          try {
+            lastPath = await generateReportCard(db, s.id, termId)
+            count++
+          } catch {
+            // Skip students with no marks/results for this term.
+          }
+        }
+        if (count === 0) return { ok: false, error: 'No report cards could be generated (no results entered for this term).' }
+
+        const dir = path.dirname(lastPath)
+        await shell.openPath(dir)
+
+        const session = sessionManager.get()!
+        logActivity({
+          actorType: session.role,
+          actorLabel: session.role === 'admin' ? session.username : session.className,
+          action: `Generated ${count} class report cards`,
+          entityType: 'class',
+          entityId: classId
+        })
+        return { ok: true, data: { count, dir } }
       } catch (err: any) {
         return { ok: false, error: err.message }
       }

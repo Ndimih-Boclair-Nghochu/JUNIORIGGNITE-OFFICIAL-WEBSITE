@@ -1,0 +1,3 @@
+# NEVER commit signing keys. The private key must stay with ELIGNITE only.
+keys/
+*.lic

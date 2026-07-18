@@ -5,6 +5,7 @@ import { getDb, getDeviceId } from '../db/connection'
 import { sessionManager } from '../session/sessionManager'
 import { logActivity } from '../services/activityLog'
 import { assertNotReadOnly } from '../services/license'
+import { transitionStudent } from '../services/studentTransition'
 
 function mapStudent(r: any): Student {
   return {
@@ -246,30 +247,6 @@ export function registerStudentHandlers(): void {
       return { ok: false, error: err.message }
     }
   })
-
-  function transitionStudent(
-    studentId: number,
-    toStatus: string,
-    eventType: string,
-    toClassId: number | null,
-    notes: string | null
-  ) {
-    const db = getDb()
-    const student = db.prepare('SELECT * FROM students WHERE id = ?').get(studentId) as any
-    if (!student) throw new Error('Student not found.')
-    const run = db.transaction(() => {
-      db.prepare(`UPDATE students SET status = ?, class_id = ?, last_modified_at = datetime('now') WHERE id = ?`).run(
-        toStatus,
-        toClassId,
-        studentId
-      )
-      db.prepare(
-        `INSERT INTO student_history (student_id, event_type, from_class_id, to_class_id, notes) VALUES (?, ?, ?, ?, ?)`
-      ).run(studentId, eventType, student.class_id, toClassId, notes)
-    })
-    run()
-    return student
-  }
 
   ipcMain.handle(
     IPC.STUDENTS_PROMOTE,

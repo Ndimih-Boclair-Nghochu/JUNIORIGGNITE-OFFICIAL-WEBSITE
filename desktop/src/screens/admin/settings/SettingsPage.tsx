@@ -97,6 +97,52 @@ export default function SettingsPage(): JSX.Element {
             <input className="input-field" value={school.subdivision ?? ''} onChange={(e) => update('subdivision', e.target.value)} />
           </div>
         </div>
+        {/* Printed on report cards: the P.O. Box line under the school name and
+            the name under the PRINCIPAL signature. */}
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="label-field">P.O. Box</label>
+            <input
+              className="input-field"
+              placeholder="e.g. 450"
+              value={school.poBox ?? ''}
+              onChange={(e) => update('poBox', e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="label-field">Village / Town</label>
+            <input
+              className="input-field"
+              placeholder="e.g. Yaoundé - Cameroon"
+              value={school.villageTown ?? ''}
+              onChange={(e) => update('villageTown', e.target.value)}
+            />
+          </div>
+        </div>
+        <div>
+          <label className="label-field">Promotion average (out of 20)</label>
+          <input
+            type="number"
+            min={0}
+            max={20}
+            step={0.5}
+            className="input-field"
+            value={school.promotionAverage ?? 10}
+            onChange={(e) => update('promotionAverage', Number(e.target.value))}
+          />
+          <p className="mt-1 text-xs text-slate-400">
+            Pupils reaching this average are pre-selected for promotion. The admin can still promote pupils below it.
+          </p>
+        </div>
+        <div>
+          <label className="label-field">Principal's name (signs report cards)</label>
+          <input
+            className="input-field"
+            placeholder="e.g. Mr. Tambe"
+            value={school.principalName ?? ''}
+            onChange={(e) => update('principalName', e.target.value)}
+          />
+        </div>
         <div>
           <label className="label-field">{t('setup.language')}</label>
           <select className="input-field" value={school.language} onChange={(e) => update('language', e.target.value as Language)}>

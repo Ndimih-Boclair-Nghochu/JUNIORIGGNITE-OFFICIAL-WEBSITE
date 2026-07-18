@@ -19,8 +19,13 @@ import type {
   FeeStructure,
   FeePayment,
   FeeMethod,
+  FeeType,
+  ClassLevel,
+  PromotionPreview,
   LicenseInfo,
-  SyncConflict
+  RegistrationInfo,
+  ActivationResult,
+  StartupNotices
 } from './types'
 
 // Type-only contract for window.api, shared between the preload bridge and
@@ -43,6 +48,7 @@ export interface JuniorIgniteApi {
       adminPassword: string
     }) => Promise<ApiResult<{ classCodes: Record<string, string> }>>
     integrityStatus: () => Promise<ApiResult<{ ok: boolean }>>
+    quit: () => Promise<ApiResult<null>>
   }
   auth: {
     adminLogin: (payload: { username: string; password: string }) => Promise<ApiResult<Session>>
@@ -96,6 +102,7 @@ export interface JuniorIgniteApi {
       subsystem: Subsystem
       capacity: number
       classTeacherId: number | null
+      levelId: number | null
     }) => Promise<ApiResult<{ schoolClass: SchoolClass; accessCode: string }>>
     update: (payload: {
       id: number
@@ -103,6 +110,7 @@ export interface JuniorIgniteApi {
       subsystem?: Subsystem
       capacity?: number
       classTeacherId?: number | null
+      levelId?: number | null
     }) => Promise<ApiResult<SchoolClass>>
     delete: (payload: { id: number }) => Promise<ApiResult<null>>
     regenerateCode: (payload: { id: number }) => Promise<ApiResult<{ accessCode: string }>>
@@ -169,6 +177,7 @@ export interface JuniorIgniteApi {
   }
   reportCards: {
     generate: (payload: { studentId: number; termId: number }) => Promise<ApiResult<{ path: string }>>
+    generateClass: (payload: { classId: number; termId: number }) => Promise<ApiResult<{ count: number; dir: string }>>
   }
   idCards: {
     generate: (payload: { studentId: number; format: 'paper' | 'pvc' }) => Promise<ApiResult<{ path: string }>>
@@ -207,25 +216,50 @@ export interface JuniorIgniteApi {
       amount: number
       method: FeeMethod
       reference?: string
+      feeTypeId?: number | null
     }) => Promise<ApiResult<{ paymentId: number }>>
     balance: (payload: {
       termId: number
     }) => Promise<ApiResult<{ totalExpected: number; totalCollected: number; totalOutstanding: number }>>
     generateReceipt: (payload: { paymentId: number }) => Promise<ApiResult<{ path: string }>>
   }
+  feeTypes: {
+    list: () => Promise<ApiResult<FeeType[]>>
+    create: (payload: { name: string; amount: number }) => Promise<ApiResult<FeeType>>
+    delete: (payload: { id: number }) => Promise<ApiResult<null>>
+  }
+  classLevels: {
+    list: () => Promise<ApiResult<ClassLevel[]>>
+    create: (payload: { name: string; orderIndex?: number }) => Promise<ApiResult<ClassLevel>>
+    update: (payload: { id: number; name?: string; orderIndex?: number }) => Promise<ApiResult<ClassLevel>>
+    delete: (payload: { id: number }) => Promise<ApiResult<null>>
+  }
+  promotion: {
+    preview: (payload: {
+      classId: number
+      termId: number | null
+      /** Overrides the school default for this run. */
+      promotionAverage?: number
+    }) => Promise<ApiResult<PromotionPreview>>
+    run: (payload: {
+      studentIds: number[]
+      toClassId: number | null
+      graduate?: boolean
+      notes?: string
+      /** Term whose report card is marked PROMOTED; defaults to the year's last term. */
+      termId?: number | null
+    }) => Promise<ApiResult<{ promoted: number }>>
+  }
   license: {
     status: () => Promise<ApiResult<LicenseInfo>>
-    renew: () => Promise<ApiResult<LicenseInfo>>
+    activate: (payload: { code: string }) => Promise<ApiResult<ActivationResult>>
+    registrationInfo: () => Promise<ApiResult<RegistrationInfo>>
+    startupNotices: () => Promise<ApiResult<StartupNotices>>
+    dismissUpdate: (payload: { kind: 'monthly' | 'annual' }) => Promise<ApiResult<null>>
   }
   backup: {
     create: () => Promise<ApiResult<{ path: string | null }>>
     list: () => Promise<ApiResult<{ path: string; name: string; size: number; createdAt: string }[]>>
     restore: () => Promise<ApiResult<{ restored: boolean }>>
-  }
-  sync: {
-    run: () => Promise<ApiResult<{ pushed: number; pulled: number; conflicts: number }>>
-    listConflicts: () => Promise<ApiResult<SyncConflict[]>>
-    resolveConflict: (payload: { conflictId: number; choice: 'local' | 'remote' }) => Promise<ApiResult<null>>
-    simulateConflict: () => Promise<ApiResult<{ created: number }>>
   }
 }

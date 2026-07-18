@@ -1,10 +1,11 @@
-import { ipcMain } from 'electron'
+import { app, ipcMain } from 'electron'
 import { IPC } from '@shared/ipcChannels'
 import type { ApiResult, School, Language } from '@shared/types'
 import { getDb, getIntegrityStatus, getDeviceId } from '../db/connection'
 import { seedDemoData } from '../db/seed'
 import { hashSecret } from '../services/auth'
 import { logActivity } from '../services/activityLog'
+import { issueInitialLicense } from '../services/license'
 import { sessionManager } from '../session/sessionManager'
 
 interface FirstRunPayload {
@@ -37,6 +38,8 @@ function mapSchool(row: any): School {
     poBox: row.po_box ?? null,
     villageTown: row.village_town ?? null,
     aboutText: row.about_text ?? null,
+    principalName: row.principal_name ?? null,
+    promotionAverage: row.promotion_average ?? 10,
     language: row.language,
     currentAcademicYearId: row.current_academic_year_id,
     currentTermId: row.current_term_id,
@@ -57,6 +60,13 @@ export function registerAppHandlers(): void {
 
   ipcMain.handle(IPC.APP_INTEGRITY_STATUS, (): ApiResult<{ ok: boolean }> => {
     return { ok: true, data: getIntegrityStatus() }
+  })
+
+  // Quit the application — used by the "Exit Application" button on the
+  // license-expired lock screen.
+  ipcMain.handle(IPC.APP_QUIT, (): ApiResult<null> => {
+    app.quit()
+    return { ok: true, data: null }
   })
 
   ipcMain.handle(
@@ -104,6 +114,11 @@ export function registerAppHandlers(): void {
         setup()
 
         const { classCodes } = await seedDemoData(db)
+
+        // Assign the permanent School ID and issue the first-year provisional
+        // license so the app is fully usable straight after setup (renewal then
+        // needs a signed ELIGNITE activation code).
+        issueInitialLicense()
 
         logActivity({
           actorType: 'admin',

@@ -1,4 +1,4 @@
-import { API_BASE } from './config'
+import { API_BASE, SITE } from './config'
 import { mockOverview, mockPublicStats, makeSchools } from './mock'
 import type { ContactPayload, FounderOverview, PublicStats, SchoolRow } from './types'
 
@@ -47,8 +47,9 @@ export const api = {
       return await req('/api/download', { method: 'POST' })
     } catch {
       usingMock = true
-      // No backend/installer yet — resolve to the guide so the button still does something.
-      return { url: '/JuniorIgnite-Setup-Guide.pdf', version: '1.0.0' }
+      // No backend configured — download the installer served statically from
+      // /downloads so the site still delivers the app on its own.
+      return { url: SITE.installerPath, version: SITE.version }
     }
   },
 

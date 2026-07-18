@@ -10,8 +10,8 @@ app.use(cors())
 app.use(express.json())
 
 const PORT = Number(process.env.PORT ?? 4000)
-const INSTALLER_URL = process.env.INSTALLER_URL ?? '/downloads/JuniorIgnite-Setup-1.0.0.exe'
-const APP_VERSION = process.env.APP_VERSION ?? '1.0.0'
+const INSTALLER_URL = process.env.INSTALLER_URL ?? '/downloads/JuniorIgnite-Setup-1.1.2.exe'
+const APP_VERSION = process.env.APP_VERSION ?? '1.1.2'
 
 const totals = () => {
   const s = get().schools

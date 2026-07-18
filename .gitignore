@@ -2,6 +2,14 @@ node_modules
 dist
 dist-ssr
 *.local
+
+# TypeScript incremental build cache
+*.tsbuildinfo
+
+# Large desktop installer served from public/downloads — kept out of git (bloat);
+# it is still copied into dist/ at build time and deployed with the site.
+public/downloads/*.exe
+public/downloads/*.blockmap
 .env
 .env.*
 !.env.example

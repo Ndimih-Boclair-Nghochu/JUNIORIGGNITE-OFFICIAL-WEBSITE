@@ -15,20 +15,25 @@ function mapClass(r: any): SchoolClass {
     classTeacherId: r.class_teacher_id,
     classTeacherName: r.teacher_first_name ? `${r.teacher_first_name} ${r.teacher_last_name}` : null,
     studentCount: r.student_count ?? 0,
-    hasAccessCode: !!r.access_code_hash
+    hasAccessCode: !!r.access_code_hash,
+    levelId: r.level_id ?? null,
+    levelName: r.level_name ?? null
   }
 }
 
 const CLASS_SELECT = `
   SELECT c.*, t.first_name as teacher_first_name, t.last_name as teacher_last_name,
+         l.name as level_name, l.order_index as level_order,
          (SELECT COUNT(*) FROM students s WHERE s.class_id = c.id AND s.status = 'active') as student_count
-  FROM classes c LEFT JOIN teachers t ON t.id = c.class_teacher_id`
+  FROM classes c LEFT JOIN teachers t ON t.id = c.class_teacher_id
+  LEFT JOIN class_levels l ON l.id = c.level_id`
 
 export function registerClassHandlers(): void {
   ipcMain.handle(IPC.CLASSES_LIST, (): ApiResult<SchoolClass[]> => {
     try {
       const db = getDb()
-      const rows = db.prepare(`${CLASS_SELECT} ORDER BY c.name`).all() as any[]
+      // Ordered by the promotion ladder first so classes read Class One → Two → …
+      const rows = db.prepare(`${CLASS_SELECT} ORDER BY COALESCE(l.order_index, 9999), c.name`).all() as any[]
       return { ok: true, data: rows.map(mapClass) }
     } catch (err: any) {
       return { ok: false, error: err.message }
@@ -66,7 +71,7 @@ export function registerClassHandlers(): void {
     IPC.CLASSES_CREATE,
     async (
       _e,
-      payload: { name: string; subsystem: Subsystem; capacity: number; classTeacherId: number | null }
+      payload: { name: string; subsystem: Subsystem; capacity: number; classTeacherId: number | null; levelId: number | null }
     ): Promise<ApiResult<{ schoolClass: SchoolClass; accessCode: string }>> => {
       try {
         const session = sessionManager.requireAdmin()
@@ -75,9 +80,9 @@ export function registerClassHandlers(): void {
         const hash = await hashSecret(code)
         const info = db
           .prepare(
-            `INSERT INTO classes (name, subsystem, capacity, access_code_hash, class_teacher_id) VALUES (?, ?, ?, ?, ?)`
+            `INSERT INTO classes (name, subsystem, capacity, access_code_hash, class_teacher_id, level_id) VALUES (?, ?, ?, ?, ?, ?)`
           )
-          .run(payload.name, payload.subsystem, payload.capacity, hash, payload.classTeacherId)
+          .run(payload.name, payload.subsystem, payload.capacity, hash, payload.classTeacherId, payload.levelId ?? null)
         const id = info.lastInsertRowid as number
         logActivity({
           actorType: 'admin',
@@ -98,7 +103,14 @@ export function registerClassHandlers(): void {
     IPC.CLASSES_UPDATE,
     (
       _e,
-      payload: { id: number; name?: string; subsystem?: Subsystem; capacity?: number; classTeacherId?: number | null }
+      payload: {
+        id: number
+        name?: string
+        subsystem?: Subsystem
+        capacity?: number
+        classTeacherId?: number | null
+        levelId?: number | null
+      }
     ): ApiResult<SchoolClass> => {
       try {
         const session = sessionManager.requireAdmin()
@@ -110,10 +122,11 @@ export function registerClassHandlers(): void {
           subsystem: payload.subsystem ?? current.subsystem,
           capacity: payload.capacity ?? current.capacity,
           classTeacherId: payload.classTeacherId !== undefined ? payload.classTeacherId : current.class_teacher_id,
+          levelId: payload.levelId !== undefined ? payload.levelId : current.level_id,
           id: payload.id
         }
         db.prepare(
-          `UPDATE classes SET name=@name, subsystem=@subsystem, capacity=@capacity, class_teacher_id=@classTeacherId WHERE id=@id`
+          `UPDATE classes SET name=@name, subsystem=@subsystem, capacity=@capacity, class_teacher_id=@classTeacherId, level_id=@levelId WHERE id=@id`
         ).run(merged)
         logActivity({
           actorType: 'admin',

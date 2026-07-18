@@ -36,6 +36,7 @@ export async function generateStudentProfile(db: Database.Database, studentId: n
   const italic = await doc.embedFont(StandardFonts.HelveticaOblique)
   const { width, height } = page.getSize()
   const photo = await embedImageFile(doc, student.photo_path ?? null)
+  const logo = await embedImageFile(doc, school?.logo_path ?? null)
 
   const schoolName = String(school?.name ?? 'School').toUpperCase()
 
@@ -160,20 +161,26 @@ export async function generateStudentProfile(db: Database.Database, studentId: n
   right('MINISTÈRE DE', rRight, hy - 30, 8, bold, NAVY)
   right("L'ÉDUCATION DE BASE", rRight, hy - 40, 8, bold, NAVY)
 
-  // center emblem (circle + open book)
+  // center emblem — the school's own logo when uploaded, else a drawn open-book mark
   const ecx = rcx
   const ecy = hy - 18
   page.drawCircle({ x: ecx, y: ecy, size: 22, borderColor: NAVY, borderWidth: 1.6, color: rgb(1, 1, 1) })
-  // open book: spine + two page outlines
-  page.drawLine({ start: { x: ecx, y: ecy + 8 }, end: { x: ecx, y: ecy - 7 }, thickness: 1.3, color: NAVY })
-  // left page
-  page.drawLine({ start: { x: ecx, y: ecy + 8 }, end: { x: ecx - 10, y: ecy + 5 }, thickness: 1.3, color: NAVY })
-  page.drawLine({ start: { x: ecx - 10, y: ecy + 5 }, end: { x: ecx - 10, y: ecy - 8 }, thickness: 1.3, color: NAVY })
-  page.drawLine({ start: { x: ecx - 10, y: ecy - 8 }, end: { x: ecx, y: ecy - 7 }, thickness: 1.3, color: NAVY })
-  // right page
-  page.drawLine({ start: { x: ecx, y: ecy + 8 }, end: { x: ecx + 10, y: ecy + 5 }, thickness: 1.3, color: NAVY })
-  page.drawLine({ start: { x: ecx + 10, y: ecy + 5 }, end: { x: ecx + 10, y: ecy - 8 }, thickness: 1.3, color: NAVY })
-  page.drawLine({ start: { x: ecx + 10, y: ecy - 8 }, end: { x: ecx, y: ecy - 7 }, thickness: 1.3, color: NAVY })
+  if (logo) {
+    // Fit the logo inside the emblem circle without distortion (aspect preserved).
+    const dims = logo.scaleToFit(36, 36)
+    page.drawImage(logo, { x: ecx - dims.width / 2, y: ecy - dims.height / 2, width: dims.width, height: dims.height })
+  } else {
+    // open book: spine + two page outlines
+    page.drawLine({ start: { x: ecx, y: ecy + 8 }, end: { x: ecx, y: ecy - 7 }, thickness: 1.3, color: NAVY })
+    // left page
+    page.drawLine({ start: { x: ecx, y: ecy + 8 }, end: { x: ecx - 10, y: ecy + 5 }, thickness: 1.3, color: NAVY })
+    page.drawLine({ start: { x: ecx - 10, y: ecy + 5 }, end: { x: ecx - 10, y: ecy - 8 }, thickness: 1.3, color: NAVY })
+    page.drawLine({ start: { x: ecx - 10, y: ecy - 8 }, end: { x: ecx, y: ecy - 7 }, thickness: 1.3, color: NAVY })
+    // right page
+    page.drawLine({ start: { x: ecx, y: ecy + 8 }, end: { x: ecx + 10, y: ecy + 5 }, thickness: 1.3, color: NAVY })
+    page.drawLine({ start: { x: ecx + 10, y: ecy + 5 }, end: { x: ecx + 10, y: ecy - 8 }, thickness: 1.3, color: NAVY })
+    page.drawLine({ start: { x: ecx + 10, y: ecy - 8 }, end: { x: ecx, y: ecy - 7 }, thickness: 1.3, color: NAVY })
+  }
 
   page.drawLine({ start: { x: rx, y: height - 112 }, end: { x: rRight, y: height - 112 }, thickness: 1, color: RULE })
 

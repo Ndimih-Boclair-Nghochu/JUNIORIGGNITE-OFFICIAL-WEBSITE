@@ -2,7 +2,8 @@ import { app, shell, BrowserWindow } from 'electron'
 import path from 'node:path'
 import { getDb, closeDb } from './db/connection'
 import { registerAllIpcHandlers } from './ipc/index'
-import { ensureLicense } from './services/license'
+import { ensureLicensingReady } from './services/license'
+import { ensureClassLevels } from './ipc/classLevels'
 
 let mainWindow: BrowserWindow | null = null
 
@@ -44,7 +45,11 @@ app.whenReady().then(() => {
   // Opens (and if needed, creates + migrates) the encrypted local database
   // once at startup so IPC handlers can assume it's ready.
   getDb()
-  ensureLicense()
+  // Ensure a set-up install has a usable license (issues the first-year
+  // provisional on first run; migrates any legacy pre-v2 license once).
+  ensureLicensingReady()
+  // Gives pre-existing schools a starting promotion ladder (one level per class).
+  ensureClassLevels()
   registerAllIpcHandlers()
 
   createWindow()

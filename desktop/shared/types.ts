@@ -8,7 +8,10 @@ export type StudentStatus = 'active' | 'promoted' | 'transferred' | 'withdrawn' 
 export type AttendanceStatus = 'present' | 'absent' | 'sick' | 'late'
 export type FeeMethod = 'momo' | 'orange' | 'other'
 export type ActorType = 'admin' | 'teacher'
-export type LicenseStatus = 'active' | 'grace' | 'expired'
+// A JuniorIgnite license is either valid (active) or past its end-of-February
+// expiry (expired). There is no read-only grace state: on expiry the app hard-
+// locks to the Activate + Support screens until a new signed code is applied.
+export type LicenseStatus = 'active' | 'expired'
 
 export interface School {
   id: number
@@ -24,6 +27,10 @@ export interface School {
   poBox: string | null
   villageTown: string | null
   aboutText: string | null
+  /** Printed under the PRINCIPAL signature line on report cards. */
+  principalName: string | null
+  /** Minimum average a pupil needs to be promoted automatically (default 10). */
+  promotionAverage: number
   language: Language
   currentAcademicYearId: number | null
   currentTermId: number | null
@@ -45,8 +52,21 @@ export interface Term {
   isCurrent: boolean
 }
 
+/**
+ * A class level ("Class One"). Levels are ordered and drive promotion: a pupil
+ * moves from a class in one level to a class in the next-higher level. One
+ * level can contain several class streams ("Class One A", "Class One B").
+ */
+export interface ClassLevel {
+  id: number
+  name: string
+  orderIndex: number
+  classCount: number
+}
+
 export interface SchoolClass {
   id: number
+  /** The stream name, e.g. "Class One A". */
   name: string
   subsystem: Subsystem
   capacity: number
@@ -54,6 +74,9 @@ export interface SchoolClass {
   classTeacherName: string | null
   studentCount: number
   hasAccessCode: boolean
+  /** The level this class belongs to; drives promotion order. */
+  levelId: number | null
+  levelName: string | null
 }
 
 export interface Subject {
@@ -158,6 +181,14 @@ export interface FeeStructure {
   description: string | null
 }
 
+/** A category of fee the school collects, e.g. "Tuition", "Exam Fees", "PTA". */
+export interface FeeType {
+  id: number
+  name: string
+  /** What the school charges for this fee (FCFA); pre-fills the payment amount. */
+  amount: number
+}
+
 export interface FeePayment {
   id: number
   studentId: number
@@ -168,6 +199,34 @@ export interface FeePayment {
   paidAt: string
   recordedBy: string
   lastModifiedAt: string
+  /** Which fee this payment was for; null for payments recorded before fee types existed. */
+  feeTypeId: number | null
+  feeTypeName: string | null
+}
+
+/** One pupil considered for promotion, with the average the decision is based on. */
+export interface PromotionCandidate {
+  studentId: number
+  name: string
+  admissionNo: string
+  /** Average over the chosen basis (a single term, or the year's mean). Null when ungraded. */
+  average: number | null
+  /** True when average >= the school's promotion average. */
+  eligible: boolean
+}
+
+/** Everything the promotion screen needs for one source class. */
+export interface PromotionPreview {
+  /** The average actually applied (the admin's entry, or the school default). */
+  promotionAverage: number
+  currentLevel: ClassLevel | null
+  /** The level directly above, when one exists — offered as the suggested destination. */
+  nextLevel: ClassLevel | null
+  /** Every class in the school; the admin picks where eligible pupils go. */
+  targetClasses: SchoolClass[]
+  /** Suggested destination (a class in nextLevel), when one can be inferred. */
+  suggestedClassId: number | null
+  candidates: PromotionCandidate[]
 }
 
 export interface LicenseInfo {
@@ -175,6 +234,46 @@ export interface LicenseInfo {
   issuedAt: string
   expiresAt: string
   daysRemaining: number
+  /** Permanent School ID assigned at setup; half of the license binding. */
+  schoolId: string
+  /** Per-install Device ID; the other half of the binding (non-transferable). */
+  deviceId: string
+  /**
+   * True while running on the auto-issued first-year provisional license (valid
+   * until the next end-of-February). A signed ELIGNITE code clears this.
+   */
+  provisional: boolean
+  /**
+   * When active and inside a warning window, the threshold (in days) that fired
+   * — one of LICENSE_WARNING_DAYS. Null when no warning should show.
+   */
+  warningThreshold: number | null
+  /** Number of enrolled students the annual licence fee is charged on. */
+  studentCount: number
+  /** Total annual licence fee payable = studentCount × LICENSE_FEE_PER_STUDENT_XAF (XAF). */
+  feeTotalXaf: number
+}
+
+/** School identity shown at setup so the school can obtain its first code. */
+export interface RegistrationInfo {
+  schoolId: string
+  deviceId: string
+  schoolName: string
+}
+
+/** Result of attempting to apply an activation code. */
+export interface ActivationResult {
+  license: LicenseInfo
+}
+
+/**
+ * One-shot notices computed at launch: an escalating license warning plus the
+ * monthly / annual "check for updates" nudges (each shown once per period).
+ */
+export interface StartupNotices {
+  license: LicenseInfo
+  showMonthlyUpdate: boolean
+  showAnnualUpdate: boolean
 }
 
 export interface ActivityLogEntry {
@@ -185,17 +284,6 @@ export interface ActivityLogEntry {
   entityType: string | null
   entityId: number | null
   details: string | null
-  createdAt: string
-}
-
-export interface SyncConflict {
-  id: number
-  entityType: string
-  entityId: number
-  localJson: string
-  remoteJson: string
-  resolved: boolean
-  resolution: string | null
   createdAt: string
 }
 
