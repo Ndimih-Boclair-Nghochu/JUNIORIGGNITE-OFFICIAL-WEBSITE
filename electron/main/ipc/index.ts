@@ -16,7 +16,8 @@ import { registerReportCardHandlers } from './reportCards'
 import { registerFeeHandlers } from './fees'
 import { registerLicenseHandlers } from './license'
 import { registerBackupHandlers } from './backup'
-import { registerSyncHandlers } from './sync'
+import { registerClassLevelHandlers } from './classLevels'
+import { registerPromotionHandlers } from './promotion'
 
 /**
  * Central registration point. Each stage adds its own register*Handlers()
@@ -34,6 +35,8 @@ export function registerAllIpcHandlers(): void {
   registerStudentHandlers()
   registerTeacherHandlers()
   registerClassHandlers()
+  registerClassLevelHandlers()
+  registerPromotionHandlers()
   registerSubjectHandlers()
   registerAttendanceHandlers()
   registerMarksHandlers()
@@ -42,5 +45,4 @@ export function registerAllIpcHandlers(): void {
   registerFeeHandlers()
   registerLicenseHandlers()
   registerBackupHandlers()
-  registerSyncHandlers()
 }

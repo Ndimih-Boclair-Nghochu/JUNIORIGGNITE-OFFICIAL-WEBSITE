@@ -10,10 +10,12 @@ export function registerLandingHandlers(): void {
       const rows = db
         .prepare(
           `SELECT c.*, t.first_name as teacher_first_name, t.last_name as teacher_last_name,
+                  l.name as level_name, l.order_index as level_order,
                   (SELECT COUNT(*) FROM students s WHERE s.class_id = c.id AND s.status = 'active') as student_count
            FROM classes c
            LEFT JOIN teachers t ON t.id = c.class_teacher_id
-           ORDER BY c.name`
+           LEFT JOIN class_levels l ON l.id = c.level_id
+           ORDER BY COALESCE(l.order_index, 9999), c.name`
         )
         .all() as any[]
 
@@ -25,7 +27,9 @@ export function registerLandingHandlers(): void {
         classTeacherId: r.class_teacher_id,
         classTeacherName: r.teacher_first_name ? `${r.teacher_first_name} ${r.teacher_last_name}` : null,
         studentCount: r.student_count,
-        hasAccessCode: !!r.access_code_hash
+        hasAccessCode: !!r.access_code_hash,
+        levelId: r.level_id ?? null,
+        levelName: r.level_name ?? null
       }))
 
       return { ok: true, data }

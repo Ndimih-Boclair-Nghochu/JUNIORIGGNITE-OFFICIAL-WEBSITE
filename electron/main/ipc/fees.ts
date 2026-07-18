@@ -1,6 +1,6 @@
 import { ipcMain, shell } from 'electron'
 import { IPC } from '@shared/ipcChannels'
-import type { ApiResult, FeeStructure, FeePayment, FeeMethod } from '@shared/types'
+import type { ApiResult, FeeStructure, FeePayment, FeeMethod, FeeType } from '@shared/types'
 import { getDb, getDeviceId } from '../db/connection'
 import { sessionManager } from '../session/sessionManager'
 import { logActivity } from '../services/activityLog'
@@ -21,7 +21,9 @@ function mapPayment(r: any): FeePayment {
     reference: r.reference,
     paidAt: r.paid_at,
     recordedBy: r.recorded_by,
-    lastModifiedAt: r.last_modified_at
+    lastModifiedAt: r.last_modified_at,
+    feeTypeId: r.fee_type_id ?? null,
+    feeTypeName: r.fee_type_name ?? null
   }
 }
 
@@ -90,7 +92,11 @@ export function registerFeeHandlers(): void {
             .prepare('SELECT amount FROM fee_structures WHERE class_id = ? AND term_id = ?')
             .get(s.class_id, termId) as { amount: number } | undefined
           const paymentRows = db
-            .prepare('SELECT * FROM fee_payments WHERE student_id = ? AND term_id = ? ORDER BY paid_at DESC')
+            .prepare(
+              `SELECT p.*, ft.name as fee_type_name FROM fee_payments p
+               LEFT JOIN fee_types ft ON ft.id = p.fee_type_id
+               WHERE p.student_id = ? AND p.term_id = ? ORDER BY p.paid_at DESC`
+            )
             .all(s.id, termId) as any[]
           const paid = paymentRows.reduce((sum, p) => sum + p.amount, 0)
           const expected = structure?.amount ?? 0
@@ -116,16 +122,30 @@ export function registerFeeHandlers(): void {
     IPC.FEES_RECORD_PAYMENT,
     (
       _e,
-      payload: { studentId: number; termId: number; amount: number; method: FeeMethod; reference?: string }
+      payload: {
+        studentId: number
+        termId: number
+        amount: number
+        method: FeeMethod
+        reference?: string
+        feeTypeId?: number | null
+      }
     ): ApiResult<{ paymentId: number }> => {
       try {
         const session = sessionManager.requireAdmin()
         assertNotReadOnly()
         const db = getDb()
+
+        // Once the school has defined fee types, every payment must say which one.
+        const typeCount = (db.prepare('SELECT COUNT(*) as n FROM fee_types').get() as { n: number }).n
+        if (typeCount > 0 && !payload.feeTypeId) {
+          return { ok: false, error: 'Select the type of fee being paid.' }
+        }
+
         const info = db
           .prepare(
-            `INSERT INTO fee_payments (student_id, term_id, amount, method, reference, recorded_by, device_id)
-             VALUES (@studentId, @termId, @amount, @method, @reference, @recordedBy, @deviceId)`
+            `INSERT INTO fee_payments (student_id, term_id, amount, method, reference, recorded_by, device_id, fee_type_id)
+             VALUES (@studentId, @termId, @amount, @method, @reference, @recordedBy, @deviceId, @feeTypeId)`
           )
           .run({
             studentId: payload.studentId,
@@ -134,7 +154,8 @@ export function registerFeeHandlers(): void {
             method: payload.method,
             reference: payload.reference ?? null,
             recordedBy: session.username,
-            deviceId: getDeviceId()
+            deviceId: getDeviceId(),
+            feeTypeId: payload.feeTypeId ?? null
           })
         const paymentId = info.lastInsertRowid as number
         logActivity({
@@ -178,6 +199,62 @@ export function registerFeeHandlers(): void {
       }
     }
   )
+
+  // ---- Fee types (Tuition, Exam Fees, PTA, …) ----
+  ipcMain.handle(IPC.FEE_TYPES_LIST, (): ApiResult<FeeType[]> => {
+    try {
+      const db = getDb()
+      const rows = db.prepare('SELECT id, name, amount FROM fee_types ORDER BY name').all() as any[]
+      return { ok: true, data: rows.map((r) => ({ id: r.id, name: r.name, amount: r.amount ?? 0 })) }
+    } catch (err: any) {
+      return { ok: false, error: err.message }
+    }
+  })
+
+  ipcMain.handle(IPC.FEE_TYPES_CREATE, (_e, { name, amount }: { name: string; amount: number }): ApiResult<FeeType> => {
+    try {
+      const session = sessionManager.requireAdmin()
+      const db = getDb()
+      const trimmed = String(name ?? '').trim()
+      if (!trimmed) return { ok: false, error: 'Fee type name is required.' }
+      const value = Number(amount ?? 0)
+      if (!Number.isFinite(value) || value < 0) return { ok: false, error: 'Enter a valid amount for this fee.' }
+      const info = db.prepare('INSERT INTO fee_types (name, amount) VALUES (?, ?)').run(trimmed, Math.round(value))
+      logActivity({
+        actorType: 'admin',
+        actorLabel: session.username,
+        action: `Added fee type ${trimmed} (${Math.round(value)} FCFA)`,
+        entityType: 'feeType',
+        entityId: info.lastInsertRowid as number
+      })
+      return { ok: true, data: { id: info.lastInsertRowid as number, name: trimmed, amount: Math.round(value) } }
+    } catch (err: any) {
+      if (String(err.message).includes('UNIQUE')) return { ok: false, error: 'That fee type already exists.' }
+      return { ok: false, error: err.message }
+    }
+  })
+
+  ipcMain.handle(IPC.FEE_TYPES_DELETE, (_e, { id }: { id: number }): ApiResult<null> => {
+    try {
+      const session = sessionManager.requireAdmin()
+      const db = getDb()
+      const type = db.prepare('SELECT name FROM fee_types WHERE id = ?').get(id) as { name: string } | undefined
+      if (!type) return { ok: false, error: 'Fee type not found.' }
+      const used = (db.prepare('SELECT COUNT(*) as n FROM fee_payments WHERE fee_type_id = ?').get(id) as { n: number }).n
+      if (used > 0) return { ok: false, error: 'Cannot delete a fee type that already has payments recorded against it.' }
+      db.prepare('DELETE FROM fee_types WHERE id = ?').run(id)
+      logActivity({
+        actorType: 'admin',
+        actorLabel: session.username,
+        action: `Deleted fee type ${type.name}`,
+        entityType: 'feeType',
+        entityId: id
+      })
+      return { ok: true, data: null }
+    } catch (err: any) {
+      return { ok: false, error: err.message }
+    }
+  })
 
   ipcMain.handle(
     IPC.FEES_GENERATE_RECEIPT,

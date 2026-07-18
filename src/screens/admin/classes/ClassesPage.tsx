@@ -61,14 +61,26 @@ export default function ClassesPage(): JSX.Element {
               <div className="flex items-start justify-between">
                 <div>
                   <h3 className="text-lg font-semibold text-slate-900">{c.name}</h3>
-                  <span
-                    className={
-                      'mt-1 inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ' +
-                      (c.subsystem === 'anglophone' ? 'bg-brand-50 text-brand-700' : 'bg-accent-50 text-accent-700')
-                    }
-                  >
-                    {c.subsystem === 'anglophone' ? 'Anglophone' : 'Francophone'}
-                  </span>
+                  <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                    <span
+                      className={
+                        'inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ' +
+                        (c.subsystem === 'anglophone' ? 'bg-brand-50 text-brand-700' : 'bg-accent-50 text-accent-700')
+                      }
+                    >
+                      {c.subsystem === 'anglophone' ? 'Anglophone' : 'Francophone'}
+                    </span>
+                    {/* Level drives which class pupils are promoted into. */}
+                    <span
+                      className={
+                        'inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ' +
+                        (c.levelName ? 'bg-slate-100 text-slate-600' : 'bg-amber-50 text-amber-700')
+                      }
+                      title={c.levelName ? 'Class level' : 'Set a level so pupils can be promoted'}
+                    >
+                      {c.levelName ?? 'No level'}
+                    </span>
+                  </div>
                 </div>
               </div>
               <div className="text-sm text-slate-500">

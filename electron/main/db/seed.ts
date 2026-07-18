@@ -62,9 +62,15 @@ export async function seedDemoData(db: Database.Database): Promise<{ classCodes:
     deviceId
   }).lastInsertRowid as number
 
+  // Class levels form the promotion ladder; each demo class sits on its own level
+  // and a level can later hold several streams (Class 5 A, Class 5 B, …).
+  const insertLevel = db.prepare(`INSERT INTO class_levels (name, order_index) VALUES (?, ?)`)
+  const levelAId = insertLevel.run('Class 5', 1).lastInsertRowid as number
+  const levelBId = insertLevel.run('CM2', 2).lastInsertRowid as number
+
   const insertClass = db.prepare(
-    `INSERT INTO classes (name, subsystem, capacity, access_code_hash, class_teacher_id)
-     VALUES (@name, @subsystem, @capacity, @codeHash, @teacherId)`
+    `INSERT INTO classes (name, subsystem, capacity, access_code_hash, class_teacher_id, level_id)
+     VALUES (@name, @subsystem, @capacity, @codeHash, @teacherId, @levelId)`
   )
 
   const codeA = generateAccessCode()
@@ -74,7 +80,8 @@ export async function seedDemoData(db: Database.Database): Promise<{ classCodes:
     subsystem: 'anglophone',
     capacity: 40,
     codeHash: await hashSecret(codeA),
-    teacherId: teacherAId
+    teacherId: teacherAId,
+    levelId: levelAId
   }).lastInsertRowid as number
 
   const codeB = generateAccessCode()
@@ -84,7 +91,8 @@ export async function seedDemoData(db: Database.Database): Promise<{ classCodes:
     subsystem: 'francophone',
     capacity: 40,
     codeHash: await hashSecret(codeB),
-    teacherId: teacherBId
+    teacherId: teacherBId,
+    levelId: levelBId
   }).lastInsertRowid as number
 
   const insertClassSubject = db.prepare(

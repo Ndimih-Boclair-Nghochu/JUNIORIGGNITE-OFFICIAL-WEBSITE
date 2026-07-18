@@ -4,6 +4,7 @@ import type { ApiResult, DashboardSummary, ActivityLogEntry } from '@shared/type
 import { getDb } from '../db/connection'
 import { sessionManager } from '../session/sessionManager'
 import { listActivity } from '../services/activityLog'
+import { getLicenseInfo } from '../services/license'
 
 export function registerDashboardHandlers(): void {
   ipcMain.handle(IPC.DASHBOARD_SUMMARY, (): ApiResult<DashboardSummary> => {
@@ -61,18 +62,9 @@ export function registerDashboardHandlers(): void {
         feesOutstanding = Math.max(0, feesExpected - feesCollected)
       }
 
-      const license = db.prepare('SELECT * FROM license WHERE id = 1').get() as
-        | { expires_at: string }
-        | undefined
-      let licenseStatus: DashboardSummary['licenseStatus'] = 'active'
-      let licenseDaysRemaining = 365
-      if (license) {
-        const daysRemaining = Math.ceil(
-          (new Date(license.expires_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
-        )
-        licenseDaysRemaining = daysRemaining
-        licenseStatus = daysRemaining > 0 ? 'active' : daysRemaining > -14 ? 'grace' : 'expired'
-      }
+      const license = getLicenseInfo()
+      const licenseStatus: DashboardSummary['licenseStatus'] = license.status
+      const licenseDaysRemaining = license.daysRemaining
 
       return {
         ok: true,

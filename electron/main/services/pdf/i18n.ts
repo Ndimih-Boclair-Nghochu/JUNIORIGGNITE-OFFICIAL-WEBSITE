@@ -46,6 +46,8 @@ export interface PdfTerms {
   reference: string
   balance: string
   received: string
+  principalSignature: string
+  feeType: string
 }
 
 const EN: PdfTerms = {
@@ -87,7 +89,9 @@ const EN: PdfTerms = {
   paymentMethod: 'Payment Method',
   reference: 'Reference',
   balance: 'Balance',
-  received: 'Received with thanks'
+  received: 'Received with thanks',
+  principalSignature: "Principal's Signature & Stamp",
+  feeType: 'Fee Type'
 }
 
 const FR: PdfTerms = {
@@ -129,7 +133,9 @@ const FR: PdfTerms = {
   paymentMethod: 'Mode de Paiement',
   reference: 'Référence',
   balance: 'Solde',
-  received: 'Reçu avec remerciements'
+  received: 'Reçu avec remerciements',
+  principalSignature: 'Signature & Cachet du Directeur',
+  feeType: 'Type de Frais'
 }
 
 export function termsFor(subsystem: Subsystem): PdfTerms {

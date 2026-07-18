@@ -16,13 +16,14 @@ import {
   Wallet,
   ShieldCheck,
   DatabaseBackup,
-  GitCompareArrows,
   History,
   Settings as SettingsIcon,
   LogOut,
-  ShieldAlert
+  ShieldAlert,
+  LifeBuoy
 } from 'lucide-react'
 import type { LicenseInfo } from '@shared/types'
+import { LICENSE_FEE_PER_STUDENT_XAF, formatXaf } from '@shared/constants'
 import { Sidebar } from '../../components/Sidebar'
 import { SchoolBadge } from '../../components/SchoolBadge'
 import { useAuthStore } from '../../store/authStore'
@@ -39,9 +40,11 @@ import AdminMarksPage from './marks/AdminMarksPage'
 import ReportCardsPage from './reportcards/ReportCardsPage'
 import IdCardsPage from './idcards/IdCardsPage'
 import FeesPage from './fees/FeesPage'
+import PromotionPage from './promotion/PromotionPage'
 import LicensePage from './license/LicensePage'
+import ActivateLicensePage from '../license/ActivateLicensePage'
+import SupportPage from '../support/SupportPage'
 import BackupPage from './backup/BackupPage'
-import SyncIssuesPage from './sync/SyncIssuesPage'
 import ActivityLogPage from './activity/ActivityLogPage'
 import SettingsPage from './settings/SettingsPage'
 
@@ -71,9 +74,10 @@ export default function AdminLayout(): JSX.Element {
     { to: '/admin/student-profiles', label: 'Student Profiles', icon: BookMarked },
     { to: '/admin/id-cards', label: 'ID Cards', icon: IdCard },
     { to: '/admin/fees', label: 'Fees', icon: Wallet },
+    { to: '/admin/promotion', label: 'Promotion', icon: GraduationCap },
     { to: '/admin/license', label: 'License', icon: ShieldCheck },
+    { to: '/admin/support', label: 'Support', icon: LifeBuoy },
     { to: '/admin/backup', label: 'Backup', icon: DatabaseBackup },
-    { to: '/admin/sync-issues', label: 'Sync Issues', icon: GitCompareArrows },
     { to: '/admin/activity-log', label: 'Activity Log', icon: History },
     { to: '/admin/settings', label: t('common.settings'), icon: SettingsIcon }
   ]
@@ -109,10 +113,20 @@ export default function AdminLayout(): JSX.Element {
         }
       />
       <div className="flex-1 overflow-y-auto">
-        {license && license.status !== 'active' && (
-          <div className="flex items-center gap-2 bg-amber-500 px-6 py-2 text-sm font-medium text-white">
-            <ShieldAlert className="h-4 w-4" />
-            License {license.status === 'grace' ? 'expired — read-only grace mode' : 'expired'}. Existing data is viewable/exportable; renew to create new records.
+        {license && (license.warningThreshold !== null || license.provisional) && (
+          <div className="flex items-center justify-between gap-2 bg-amber-500 px-6 py-2 text-sm font-medium text-white">
+            <span className="flex items-center gap-2">
+              <ShieldAlert className="h-4 w-4 shrink-0" />
+              {license.warningThreshold !== null
+                ? `Your license expires in ${license.daysRemaining} ${license.daysRemaining === 1 ? 'day' : 'days'} (${new Date(license.expiresAt).toLocaleDateString()}). Amount due: ${formatXaf(license.feeTotalXaf)} (${license.studentCount} × ${formatXaf(LICENSE_FEE_PER_STUDENT_XAF)}). Renew before the deadline to avoid interruption.`
+                : `Provisional license active until ${new Date(license.expiresAt).toLocaleDateString()}. Activate your JuniorIgnite license before the next academic year. Amount to pay: ${formatXaf(license.feeTotalXaf)} (${license.studentCount} ${license.studentCount === 1 ? 'student' : 'students'} × ${formatXaf(LICENSE_FEE_PER_STUDENT_XAF)}).`}
+            </span>
+            <button
+              onClick={() => navigate('/admin/license')}
+              className="shrink-0 rounded-lg bg-white/20 px-3 py-1 font-semibold hover:bg-white/30"
+            >
+              Activate
+            </button>
           </div>
         )}
         <Routes>
@@ -128,9 +142,26 @@ export default function AdminLayout(): JSX.Element {
           <Route path="student-profiles" element={<StudentProfilePage />} />
           <Route path="id-cards" element={<IdCardsPage />} />
           <Route path="fees" element={<FeesPage />} />
+          <Route path="promotion" element={<PromotionPage />} />
           <Route path="license" element={<LicensePage />} />
+          <Route
+            path="activate"
+            element={
+              <div className="p-8">
+                {/* Reload after a successful activation so the banner + status refresh. */}
+                <ActivateLicensePage onActivated={() => setTimeout(() => window.location.reload(), 1400)} />
+              </div>
+            }
+          />
+          <Route
+            path="support"
+            element={
+              <div className="p-8">
+                <SupportPage onActivate={() => navigate('/admin/activate')} />
+              </div>
+            }
+          />
           <Route path="backup" element={<BackupPage />} />
-          <Route path="sync-issues" element={<SyncIssuesPage />} />
           <Route path="activity-log" element={<ActivityLogPage />} />
           <Route path="settings" element={<SettingsPage />} />
           <Route path="*" element={<Dashboard />} />

@@ -15,13 +15,15 @@ const METHOD_LABEL: Record<string, string> = {
   other: 'Other'
 }
 
-/** Generates a localized A5 payment receipt for a single fee payment. */
+/** Generates a localized A6 payment receipt for a single fee payment. */
 export async function generateReceipt(db: Database.Database, paymentId: number): Promise<string> {
   const payment = db
     .prepare(
-      `SELECT p.*, s.first_name, s.last_name, s.admission_no, c.name as class_name, c.subsystem, s.class_id, s.id as student_id
+      `SELECT p.*, s.first_name, s.last_name, s.admission_no, c.name as class_name, c.subsystem, s.class_id,
+              s.id as student_id, ft.name as fee_type_name
        FROM fee_payments p JOIN students s ON s.id = p.student_id
-       JOIN classes c ON c.id = s.class_id WHERE p.id = ?`
+       JOIN classes c ON c.id = s.class_id
+       LEFT JOIN fee_types ft ON ft.id = p.fee_type_id WHERE p.id = ?`
     )
     .get(paymentId) as any
   if (!payment) throw new Error('Payment not found.')
@@ -42,60 +44,87 @@ export async function generateReceipt(db: Database.Database, paymentId: number):
   const balance = structure ? Math.max(0, structure.amount - paid) : 0
 
   const doc = await PDFDocument.create()
-  const page = doc.addPage([420, 595]) // A5 portrait
+  const page = doc.addPage([298, 420]) // A6 portrait
   const font = await doc.embedFont(StandardFonts.Helvetica)
   const bold = await doc.embedFont(StandardFonts.HelveticaBold)
   const { width, height } = page.getSize()
-  const margin = 32
+  const margin = 20
   const fmt = new Intl.NumberFormat('en').format
 
   const logo = await embedImageFile(doc, school?.logo_path ?? null)
 
-  page.drawRectangle({ x: 0, y: height - 84, width, height: 84, color: rgb(0.96, 0.98, 0.97) })
+  // --- Header band ---
+  const headH = 56
+  page.drawRectangle({ x: 0, y: height - headH, width, height: headH, color: rgb(0.96, 0.98, 0.97) })
+  let headTextX = margin
   if (logo) {
-    const d = logo.scaleToFit(48, 48)
-    page.drawImage(logo, { x: margin, y: height - 68, width: d.width, height: d.height })
+    const d = logo.scaleToFit(36, 36) // aspect preserved — never stretched
+    page.drawImage(logo, { x: margin, y: height - 46, width: d.width, height: d.height })
+    headTextX = margin + 44
   }
-  page.drawText((school?.name ?? 'School').toUpperCase(), { x: margin + 58, y: height - 40, size: 13, font: bold, color: BRAND })
+  page.drawText((school?.name ?? 'School').toUpperCase(), { x: headTextX, y: height - 26, size: 10, font: bold, color: BRAND })
   const addr = [school?.address, school?.phone].filter(Boolean).join(' · ')
-  if (addr) page.drawText(addr, { x: margin + 58, y: height - 56, size: 8, font, color: MUTED })
+  if (addr) page.drawText(addr.slice(0, 52), { x: headTextX, y: height - 40, size: 6.5, font, color: MUTED })
 
-  let y = height - 108
-  page.drawText(T.receiptTitle, { x: margin, y, size: 14, font: bold, color: INK })
-  page.drawText(`${T.receiptNo}: R-${String(payment.id).padStart(5, '0')}`, { x: width - margin - 130, y, size: 9, font, color: MUTED })
-  y -= 14
-  page.drawText(`${T.date}: ${new Date(payment.paid_at).toLocaleDateString()}`, { x: width - margin - 130, y, size: 9, font, color: MUTED })
+  // --- Title + meta ---
+  let y = height - headH - 18
+  page.drawText(T.receiptTitle, { x: margin, y, size: 11, font: bold, color: INK })
+  page.drawText(`${T.receiptNo}: R-${String(payment.id).padStart(5, '0')}`, { x: margin, y: y - 13, size: 7.5, font, color: MUTED })
+  page.drawText(`${T.date}: ${new Date(payment.paid_at).toLocaleDateString()}`, {
+    x: width - margin - font.widthOfTextAtSize(`${T.date}: ${new Date(payment.paid_at).toLocaleDateString()}`, 7.5),
+    y: y - 13,
+    size: 7.5,
+    font,
+    color: MUTED
+  })
 
-  y -= 26
+  y -= 30
+  page.drawLine({ start: { x: margin, y }, end: { x: width - margin, y }, thickness: 0.5, color: LINE })
+  y -= 16
+
+  // --- Detail rows ---
   const rows: [string, string][] = [
     [T.studentName, `${payment.first_name} ${payment.last_name}`],
     [T.admissionNo, payment.admission_no],
     [T.className, payment.class_name],
+    // Only shown once the school has defined fee types.
+    ...(payment.fee_type_name ? ([[T.feeType, payment.fee_type_name]] as [string, string][]) : []),
     [T.paymentMethod, METHOD_LABEL[payment.method] ?? payment.method],
     [T.reference, payment.reference ?? '-']
   ]
   for (const [label, value] of rows) {
-    page.drawText(`${label}:`, { x: margin, y, size: 9, font, color: MUTED })
-    page.drawText(value, { x: margin + 130, y, size: 10, font: bold, color: INK })
-    y -= 22
+    page.drawText(`${label}:`, { x: margin, y, size: 7.5, font, color: MUTED })
+    page.drawText(String(value), { x: margin + 96, y, size: 8.5, font: bold, color: INK })
+    y -= 16
   }
 
-  y -= 6
-  page.drawLine({ start: { x: margin, y }, end: { x: width - margin, y }, thickness: 0.5, color: LINE })
-  y -= 26
+  // --- Amount highlight ---
+  y -= 4
+  page.drawRectangle({ x: margin, y: y - 34, width: width - margin * 2, height: 36, color: BRAND })
+  page.drawText(T.amountPaid, { x: margin + 10, y: y - 13, size: 7.5, font, color: rgb(0.9, 0.95, 0.92) })
+  page.drawText(`${fmt(payment.amount)} FCFA`, { x: margin + 10, y: y - 28, size: 14, font: bold, color: rgb(1, 1, 1) })
+  y -= 48
 
-  // Amount highlight
-  page.drawRectangle({ x: margin, y: y - 40, width: width - margin * 2, height: 44, color: BRAND })
-  page.drawText(T.amountPaid, { x: margin + 12, y: y - 16, size: 9, font, color: rgb(0.9, 0.95, 0.92) })
-  page.drawText(`${fmt(payment.amount)} FCFA`, { x: margin + 12, y: y - 33, size: 16, font: bold, color: rgb(1, 1, 1) })
-  y -= 60
+  page.drawText(`${T.balance}: ${fmt(balance)} FCFA`, {
+    x: margin,
+    y,
+    size: 9,
+    font: bold,
+    color: balance > 0 ? rgb(0.8, 0.3, 0.1) : BRAND
+  })
+  y -= 16
+  page.drawText(`${T.received} — ${payment.recorded_by}`, { x: margin, y, size: 7, font, color: MUTED })
 
-  page.drawText(`${T.balance}: ${fmt(balance)} FCFA`, { x: margin, y, size: 11, font: bold, color: balance > 0 ? rgb(0.8, 0.3, 0.1) : BRAND })
-
-  y -= 40
-  page.drawText(`${T.received} — ${payment.recorded_by}`, { x: margin, y, size: 9, font, color: MUTED })
-
-  page.drawText('Generated by JuniorIgnite', { x: margin, y: 24, size: 7, font, color: MUTED })
+  // --- Principal's signature (bottom) ---
+  const sigY = 46
+  page.drawLine({ start: { x: width - margin - 130, y: sigY }, end: { x: width - margin, y: sigY }, thickness: 0.8, color: INK })
+  page.drawText(T.principalSignature, {
+    x: width - margin - 130,
+    y: sigY - 11,
+    size: 7,
+    font: bold,
+    color: MUTED
+  })
 
   const bytes = await doc.save()
   return savePdf(`receipt-${payment.admission_no}`, bytes)

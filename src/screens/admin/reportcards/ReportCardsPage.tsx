@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { FileBadge, Loader2, FileDown, Pencil } from 'lucide-react'
+import { FileBadge, Loader2, FileDown, Pencil, FolderDown } from 'lucide-react'
 import { EmptyState } from '../../../components/EmptyState'
 import { Modal } from '../../../components/Modal'
 import type { SchoolClass, Term, Student, ReportCardMeta } from '@shared/types'
@@ -12,6 +12,7 @@ export default function ReportCardsPage(): JSX.Element {
   const [students, setStudents] = useState<Student[]>([])
   const [loading, setLoading] = useState(false)
   const [generatingId, setGeneratingId] = useState<number | null>(null)
+  const [generatingClass, setGeneratingClass] = useState(false)
   const [metaStudent, setMetaStudent] = useState<Student | null>(null)
 
   useEffect(() => {
@@ -46,25 +47,43 @@ export default function ReportCardsPage(): JSX.Element {
     if (!res.ok) alert(res.error)
   }
 
+  async function handleGenerateClass(): Promise<void> {
+    if (!classId || !termId) return
+    setGeneratingClass(true)
+    const res = await window.api.reportCards.generateClass({ classId, termId })
+    setGeneratingClass(false)
+    if (!res.ok) alert(res.error)
+    else alert(`Generated ${res.data?.count ?? 0} report cards (one A5 PDF per student). Opening the folder…`)
+  }
+
   return (
     <div className="p-8">
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold text-slate-900">Report Cards</h1>
-        <div className="flex gap-3">
-          <select className="input-field w-48" value={termId ?? ''} onChange={(e) => setTermId(Number(e.target.value))}>
+        <div className="flex flex-wrap gap-3">
+          <select className="input-field w-44" value={termId ?? ''} onChange={(e) => setTermId(Number(e.target.value))}>
             {terms.map((t) => (
               <option key={t.id} value={t.id}>
                 {t.name}
               </option>
             ))}
           </select>
-          <select className="input-field w-56" value={classId ?? ''} onChange={(e) => setClassId(Number(e.target.value))}>
+          <select className="input-field w-52" value={classId ?? ''} onChange={(e) => setClassId(Number(e.target.value))}>
             {classes.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
               </option>
             ))}
           </select>
+          <button
+            className="btn-primary"
+            onClick={handleGenerateClass}
+            disabled={generatingClass || students.length === 0 || !termId}
+            title="Generate a separate A5 PDF report card for every student in this class"
+          >
+            {generatingClass ? <Loader2 className="h-4 w-4 animate-spin" /> : <FolderDown className="h-4 w-4" />}
+            Generate whole class
+          </button>
         </div>
       </div>
 

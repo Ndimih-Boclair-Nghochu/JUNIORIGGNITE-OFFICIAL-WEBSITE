@@ -80,7 +80,7 @@ export default function Dashboard(): JSX.Element {
           icon={ShieldCheck}
           label={t('dashboard.licenseStatus')}
           value={summary.licenseStatus.toUpperCase()}
-          tone={summary.licenseStatus === 'active' ? 'brand' : summary.licenseStatus === 'grace' ? 'accent' : 'red'}
+          tone={summary.licenseStatus === 'active' ? 'brand' : 'red'}
         />
         <StatCard icon={Wallet} label={t('dashboard.feesCollected')} value={`${fmt.format(summary.feesCollected)} FCFA`} />
         <StatCard
