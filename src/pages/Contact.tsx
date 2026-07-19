@@ -3,8 +3,10 @@ import { Mail, Phone, MapPin, Clock, Send, Loader2, CheckCircle2, Sparkles } fro
 import { Reveal } from '@/components/Reveal'
 import { api } from '@/lib/api'
 import { SITE } from '@/lib/config'
+import { useSiteSettings } from '@/lib/useSiteSettings'
 
 export default function Contact(): JSX.Element {
+  const site = useSiteSettings()
   const [form, setForm] = useState({ name: '', email: '', organization: '', message: '' })
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
 
@@ -25,10 +27,11 @@ export default function Contact(): JSX.Element {
   }
 
   const details = [
-    { icon: Mail, label: 'Email', value: SITE.contact.email, href: `mailto:${SITE.contact.email}` },
-    { icon: Phone, label: 'Phone', value: SITE.contact.phone, href: `tel:${SITE.contact.phone.replace(/\s/g, '')}` },
-    { icon: MapPin, label: 'Location', value: SITE.contact.address },
-    { icon: Clock, label: 'Hours', value: SITE.contact.hours }
+    // Sourced from the founder console so contact details stay in one place.
+    { icon: Mail, label: 'Email', value: site.email, href: `mailto:${site.email}` },
+    { icon: Phone, label: 'Phone', value: site.phone, href: `tel:${site.phone.replace(/\s/g, '')}` },
+    { icon: MapPin, label: 'Location', value: site.address },
+    { icon: Clock, label: 'Hours', value: site.hours }
   ]
 
   return (

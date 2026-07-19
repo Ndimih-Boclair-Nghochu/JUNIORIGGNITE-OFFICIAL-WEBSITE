@@ -70,3 +70,15 @@ export interface ContactMsg {
   message: string
   createdAt: string
 }
+
+/** Contact details + outbound links, editable by the founder. */
+export interface SiteSettings {
+  email: string
+  phone: string
+  address: string
+  hours: string
+  eligniteUrl: string
+  youtube: string
+  facebook: string
+  updatedAt: string | null
+}

@@ -77,6 +77,11 @@ app.get('/api/stats/public', (_req, res) => {
   res.json({ downloads: t.downloads, schools: t.schools, students: t.students, activeUsers: t.activeUsers })
 })
 
+/** Contact details + links rendered across the public site, editable by the founder. */
+app.get('/api/site-settings', (_req, res) => {
+  res.json(get().site)
+})
+
 /**
  * Latest desktop release. Installed apps poll this to decide whether to show
  * their "Update available" button, which sends the school to the download page.
@@ -213,6 +218,32 @@ app.put('/api/founder/stats', requireFounder, (req, res) => {
   }
   save()
   res.json(db.stats)
+})
+
+// ---- Site settings (contact details + ELIGNITE link) ----
+app.get('/api/founder/site-settings', requireFounder, (_req, res) => {
+  res.json(get().site)
+})
+
+app.put('/api/founder/site-settings', requireFounder, (req, res) => {
+  const db = get()
+  const b = req.body ?? {}
+  const keep = (v: unknown, current: string, max = 200): string => {
+    const s = clean(v, max)
+    return v === undefined ? current : s
+  }
+  db.site = {
+    email: keep(b.email, db.site.email, 160),
+    phone: keep(b.phone, db.site.phone, 60),
+    address: keep(b.address, db.site.address, 240),
+    hours: keep(b.hours, db.site.hours, 120),
+    eligniteUrl: keep(b.eligniteUrl, db.site.eligniteUrl, 300),
+    youtube: keep(b.youtube, db.site.youtube, 300),
+    facebook: keep(b.facebook, db.site.facebook, 300),
+    updatedAt: new Date().toISOString()
+  }
+  save()
+  res.json(db.site)
 })
 
 // ---- Licence records ----

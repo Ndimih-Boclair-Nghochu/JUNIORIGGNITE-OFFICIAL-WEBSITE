@@ -7,7 +7,8 @@ import type {
   SchoolRow,
   PublicStatsInput,
   LicenseRow,
-  ContactMsg
+  ContactMsg,
+  SiteSettings
 } from './types'
 
 const FOUNDER_TOKEN_KEY = 'ji_founder_token'
@@ -71,24 +72,19 @@ export const api = {
   },
 
   // ---- Founder ----
+  /**
+   * Founder sign-in. There is deliberately NO offline/demo fallback — the only
+   * way in is a real credential verified by the server, so a lost connection
+   * fails closed rather than handing out a console session.
+   */
   founderLogin: async (email: string, password: string): Promise<{ token: string }> => {
-    try {
-      const r = await req<{ token: string }>('/api/founder/login', {
-        method: 'POST',
-        body: JSON.stringify({ email, password })
-      })
-      localStorage.setItem(FOUNDER_TOKEN_KEY, r.token)
-      usingMock = false
-      return r
-    } catch (err) {
-      // Demo credentials work offline so the dashboard can be reviewed.
-      if (email.trim().toLowerCase() === 'founder@juniorignite.app' && password === 'founder123') {
-        localStorage.setItem(FOUNDER_TOKEN_KEY, 'demo-token')
-        usingMock = true
-        return { token: 'demo-token' }
-      }
-      throw err instanceof Error ? err : new Error('Login failed')
-    }
+    const r = await req<{ token: string }>('/api/founder/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password })
+    })
+    localStorage.setItem(FOUNDER_TOKEN_KEY, r.token)
+    usingMock = false
+    return r
   },
 
   isFounderAuthed: (): boolean => !!localStorage.getItem(FOUNDER_TOKEN_KEY),
@@ -140,5 +136,11 @@ export const api = {
   deleteLicense: (id: number): Promise<{ ok: true }> =>
     req<{ ok: true }>(`/api/founder/licenses/${id}`, { method: 'DELETE' }),
 
-  contacts: (): Promise<ContactMsg[]> => req<ContactMsg[]>('/api/founder/contacts')
+  contacts: (): Promise<ContactMsg[]> => req<ContactMsg[]>('/api/founder/contacts'),
+
+  // ---- Site settings (public read, founder write) ----
+  siteSettings: (): Promise<SiteSettings> => req<SiteSettings>('/api/site-settings'),
+
+  saveSiteSettings: (patch: Partial<SiteSettings>): Promise<SiteSettings> =>
+    req<SiteSettings>('/api/founder/site-settings', { method: 'PUT', body: JSON.stringify(patch) })
 }

@@ -28,6 +28,8 @@ import {
 import { Logo } from '@/components/Logo'
 import { StatsEditor } from '@/components/founder/StatsEditor'
 import { LicenseManager } from '@/components/founder/LicenseManager'
+import { SiteSettingsEditor } from '@/components/founder/SiteSettingsEditor'
+import { ContactInbox } from '@/components/founder/ContactInbox'
 import { api, usingMock } from '@/lib/api'
 import type { FounderOverview, SchoolRow } from '@/lib/types'
 
@@ -176,6 +178,8 @@ export default function FounderDashboard(): JSX.Element {
             <div className="mt-6 grid gap-6">
               <StatsEditor />
               <LicenseManager />
+              <SiteSettingsEditor />
+              <ContactInbox />
             </div>
 
             {/* Schools table */}

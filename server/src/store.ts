@@ -58,6 +58,33 @@ export interface LicenseRow {
   notes: string | null
 }
 
+/**
+ * Contact details and outbound links shown across the public site. Editable by
+ * the founder so the site can be updated without a redeploy.
+ */
+export interface SiteSettings {
+  email: string
+  phone: string
+  address: string
+  hours: string
+  /** "POWERED BY ELIGNITE" in the footer links here. */
+  eligniteUrl: string
+  youtube: string
+  facebook: string
+  updatedAt: string | null
+}
+
+export const DEFAULT_SITE_SETTINGS: SiteSettings = {
+  email: 'juniorignitecmr@gmail.com',
+  phone: '+237 678 897 272',
+  address: 'Bamenda, North West Region, Cameroon',
+  hours: 'Mon – Sat: 8:00 AM – 6:00 PM',
+  eligniteUrl: 'https://elignite.com',
+  youtube: '',
+  facebook: '',
+  updatedAt: null
+}
+
 interface DB {
   downloads: number
   downloadEvents: { ts: string }[]
@@ -65,6 +92,7 @@ interface DB {
   contacts: ContactMsg[]
   licenses: LicenseRow[]
   stats: PublicStatsRow
+  site: SiteSettings
   founder: { email: string; salt: string; hash: string }
   seq: number
 }
@@ -100,6 +128,7 @@ function seed(): DB {
     contacts: [],
     licenses: [],
     stats: { schools: 0, students: 0, activeUsers: 0, updatedAt: null },
+    site: { ...DEFAULT_SITE_SETTINGS },
     founder: { email, salt, hash },
     seq: 1
   }
@@ -113,6 +142,7 @@ export function load(): void {
     // existing deployment keeps working without manual intervention.
     db.licenses ??= []
     db.stats ??= { schools: 0, students: 0, activeUsers: 0, updatedAt: null }
+    db.site = { ...DEFAULT_SITE_SETTINGS, ...(db.site ?? {}) }
     db.contacts ??= []
     db.schools ??= []
     db.downloadEvents ??= []
@@ -133,7 +163,7 @@ export function resetData(): void {
   db.contacts = []
   db.licenses = []
   db.stats = { schools: 0, students: 0, activeUsers: 0, updatedAt: null }
-  db.seq = 1
+  db.seq = 1  // site settings are configuration, not data — deliberately kept
   save()
 }
 

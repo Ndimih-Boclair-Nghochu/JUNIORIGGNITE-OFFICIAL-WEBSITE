@@ -29,5 +29,14 @@ export const SITE = {
   }
 } as const
 
-/** Base URL of the backend API (lives in the desktop app repo). */
-export const API_BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? 'http://localhost:4000'
+/**
+ * Base URL of the backend API.
+ *
+ * In production this MUST default to '' (same origin) so the deployed site calls
+ * its own /api through nginx. Defaulting to localhost here previously meant a
+ * build made without a .env silently pointed every visitor at their own machine
+ * — the API calls failed and the UI quietly fell back to empty data.
+ * Only development falls back to the local API server.
+ */
+export const API_BASE =
+  (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? (import.meta.env.DEV ? 'http://localhost:4000' : '')
