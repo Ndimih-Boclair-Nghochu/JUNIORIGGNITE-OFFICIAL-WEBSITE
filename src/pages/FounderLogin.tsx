@@ -65,7 +65,6 @@ export default function FounderLogin(): JSX.Element {
           </form>
 
           <div className="mt-5 rounded-xl bg-slate-50 px-4 py-3 text-xs text-ink-muted">
-            <span className="font-semibold text-ink-soft">Demo access:</span> founder@juniorignite.app / founder123
           </div>
         </div>
 

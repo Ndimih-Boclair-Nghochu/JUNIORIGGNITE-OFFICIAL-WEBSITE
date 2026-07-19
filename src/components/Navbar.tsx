@@ -1,18 +1,21 @@
 import { useEffect, useState } from 'react'
-import { Link, NavLink, useNavigate } from 'react-router-dom'
-import { Download, Menu, X } from 'lucide-react'
+import { Link, NavLink } from 'react-router-dom'
+import { Download, Menu, X, Languages } from 'lucide-react'
 import { Logo } from './Logo'
-
-const LINKS = [
-  { to: '/', label: 'Home' },
-  { to: '/about', label: 'About' },
-  { to: '/contact', label: 'Contact' }
-]
+import { useT, type Lang } from '@/lib/i18n'
 
 export function Navbar(): JSX.Element {
   const [scrolled, setScrolled] = useState(false)
   const [open, setOpen] = useState(false)
-  const navigate = useNavigate()
+  const { t, lang, setLang } = useT()
+
+  // The founder console is deliberately NOT linked here — it is reached only
+  // through the © symbol in the footer.
+  const links = [
+    { to: '/', label: t('nav.home') },
+    { to: '/about', label: t('nav.about') },
+    { to: '/contact', label: t('nav.contact') }
+  ]
 
   useEffect(() => {
     const onScroll = (): void => setScrolled(window.scrollY > 8)
@@ -20,6 +23,8 @@ export function Navbar(): JSX.Element {
     window.addEventListener('scroll', onScroll)
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
+
+  const toggleLang = (): void => setLang(lang === 'en' ? ('fr' as Lang) : ('en' as Lang))
 
   return (
     <header
@@ -32,7 +37,7 @@ export function Navbar(): JSX.Element {
         <Logo />
 
         <div className="hidden items-center gap-1 md:flex">
-          {LINKS.map((l) => (
+          {links.map((l) => (
             <NavLink
               key={l.to}
               to={l.to}
@@ -48,28 +53,41 @@ export function Navbar(): JSX.Element {
         </div>
 
         <div className="hidden items-center gap-3 md:flex">
-          <Link to="/founder" className="text-sm font-semibold text-ink-muted hover:text-brand-700">
-            Founder
-          </Link>
+          <button
+            onClick={toggleLang}
+            aria-label={lang === 'en' ? 'Passer en français' : 'Switch to English'}
+            title={lang === 'en' ? 'Passer en français' : 'Switch to English'}
+            className="inline-flex items-center gap-1.5 rounded-full border border-slate-300 px-3 py-1.5 text-sm font-semibold text-ink-soft transition hover:border-brand-300 hover:text-brand-700"
+          >
+            <Languages className="h-4 w-4" />
+            {/* Shows the language you would switch TO. */}
+            {lang === 'en' ? 'FR' : 'EN'}
+          </button>
           <Link to="/#download" className="btn-primary !py-2.5 text-sm">
             <Download className="h-4 w-4" />
-            Download
+            {t('nav.download')}
           </Link>
         </div>
 
-        <button
-          className="rounded-lg p-2 text-ink-soft md:hidden"
-          onClick={() => setOpen((v) => !v)}
-          aria-label="Menu"
-        >
-          {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-        </button>
+        <div className="flex items-center gap-2 md:hidden">
+          <button
+            onClick={toggleLang}
+            aria-label={lang === 'en' ? 'Passer en français' : 'Switch to English'}
+            className="inline-flex items-center gap-1 rounded-full border border-slate-300 px-2.5 py-1.5 text-xs font-bold text-ink-soft"
+          >
+            <Languages className="h-3.5 w-3.5" />
+            {lang === 'en' ? 'FR' : 'EN'}
+          </button>
+          <button className="rounded-lg p-2 text-ink-soft" onClick={() => setOpen((v) => !v)} aria-label={t('nav.menu')}>
+            {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
+        </div>
       </nav>
 
       {open && (
         <div className="border-t border-slate-200 bg-white md:hidden">
           <div className="container-page flex flex-col gap-1 py-3">
-            {LINKS.map((l) => (
+            {links.map((l) => (
               <NavLink
                 key={l.to}
                 to={l.to}
@@ -83,18 +101,9 @@ export function Navbar(): JSX.Element {
                 {l.label}
               </NavLink>
             ))}
-            <button
-              onClick={() => {
-                setOpen(false)
-                navigate('/founder')
-              }}
-              className="rounded-xl px-4 py-3 text-left text-base font-semibold text-ink-soft hover:bg-slate-50"
-            >
-              Founder login
-            </button>
             <Link to="/#download" onClick={() => setOpen(false)} className="btn-primary mt-1">
               <Download className="h-4 w-4" />
-              Download the app
+              {t('nav.downloadApp')}
             </Link>
           </div>
         </div>

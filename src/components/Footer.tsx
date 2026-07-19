@@ -3,9 +3,11 @@ import { Mail, Phone, MapPin, Youtube, Facebook } from 'lucide-react'
 import { Logo } from './Logo'
 import { SITE } from '@/lib/config'
 import { useSiteSettings } from '@/lib/useSiteSettings'
+import { useT } from '@/lib/i18n'
 
 export function Footer(): JSX.Element {
   const site = useSiteSettings()
+  const { t } = useT()
 
   return (
     <footer className="border-t border-slate-200 bg-slate-50">
@@ -38,17 +40,17 @@ export function Footer(): JSX.Element {
         </div>
 
         <div>
-          <h4 className="text-sm font-bold uppercase tracking-wider text-ink">Explore</h4>
+          <h4 className="text-sm font-bold uppercase tracking-wider text-ink">{t('footer.explore')}</h4>
           <ul className="mt-4 space-y-2.5 text-sm text-ink-muted">
-            <li><Link to="/" className="hover:text-brand-700">Home</Link></li>
-            <li><Link to="/about" className="hover:text-brand-700">About</Link></li>
-            <li><Link to="/contact" className="hover:text-brand-700">Contact</Link></li>
-            <li><Link to="/#download" className="hover:text-brand-700">Download</Link></li>
+            <li><Link to="/" className="hover:text-brand-700">{t('nav.home')}</Link></li>
+            <li><Link to="/about" className="hover:text-brand-700">{t('nav.about')}</Link></li>
+            <li><Link to="/contact" className="hover:text-brand-700">{t('nav.contact')}</Link></li>
+            <li><Link to="/#download" className="hover:text-brand-700">{t('nav.download')}</Link></li>
           </ul>
         </div>
 
         <div>
-          <h4 className="text-sm font-bold uppercase tracking-wider text-ink">Contact</h4>
+          <h4 className="text-sm font-bold uppercase tracking-wider text-ink">{t('footer.contact')}</h4>
           <ul className="mt-4 space-y-2.5 text-sm text-ink-muted">
             <li className="flex items-start gap-2">
               <Mail className="mt-0.5 h-4 w-4 text-brand-500" />
@@ -82,7 +84,7 @@ export function Footer(): JSX.Element {
             >
               ©
             </Link>{' '}
-            {new Date().getFullYear()} JuniorIgnite. All rights reserved.
+            {new Date().getFullYear()} JuniorIgnite. {t('footer.rights')}
           </span>
 
           <a
@@ -91,7 +93,7 @@ export function Footer(): JSX.Element {
             rel="noreferrer"
             className="font-bold uppercase tracking-wider text-ink transition hover:text-brand-700"
           >
-            Powered by ELIGNITE
+            {t('footer.poweredBy')}
           </a>
         </div>
       </div>

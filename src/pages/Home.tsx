@@ -23,6 +23,7 @@ import { SectionHeader } from '@/components/SectionHeader'
 import { Reveal } from '@/components/Reveal'
 import { api } from '@/lib/api'
 import { SITE } from '@/lib/config'
+import { useT } from '@/lib/i18n'
 import type { PublicStats } from '@/lib/types'
 
 const FEATURES = [
@@ -45,6 +46,7 @@ const STEPS = [
 ]
 
 export default function Home(): JSX.Element {
+  const { t } = useT()
   const [stats, setStats] = useState<PublicStats | null>(null)
 
   useEffect(() => {
@@ -66,12 +68,12 @@ export default function Home(): JSX.Element {
           <Reveal>
             <span className="eyebrow">
               <Sparkles className="h-4 w-4 text-accent-500" />
-              Offline School Management · Cameroon
+              {t('hero.eyebrow')}
             </span>
             <h1 className="mt-4 text-4xl font-extrabold leading-[1.08] tracking-tight text-ink sm:text-5xl lg:text-6xl">
-              Run your school,{' '}
+              {t('hero.title1')}{' '}
               <span className="bg-gradient-to-r from-brand-600 to-accent-500 bg-clip-text text-transparent">
-                even without internet
+                {t('hero.title2')}
               </span>
             </h1>
             <p className="mt-5 max-w-xl text-lg leading-relaxed text-ink-muted">
@@ -82,13 +84,13 @@ export default function Home(): JSX.Element {
               <DownloadButton className="btn-primary text-base" size={`${SITE.installerSizeMb} MB`} />
               <a href="#video" className="btn-ghost text-base">
                 <PlayCircle className="h-5 w-5" />
-                Watch the guide
+                {t('hero.watchGuide')}
               </a>
             </div>
             <div className="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-ink-muted">
-              <span className="inline-flex items-center gap-1.5"><WifiOff className="h-4 w-4 text-brand-500" /> Works fully offline</span>
-              <span className="inline-flex items-center gap-1.5"><ShieldCheck className="h-4 w-4 text-brand-500" /> Windows 10 &amp; 11</span>
-              <span className="inline-flex items-center gap-1.5"><Languages className="h-4 w-4 text-brand-500" /> English &amp; French</span>
+              <span className="inline-flex items-center gap-1.5"><WifiOff className="h-4 w-4 text-brand-500" /> {t('hero.worksOffline')}</span>
+              <span className="inline-flex items-center gap-1.5"><ShieldCheck className="h-4 w-4 text-brand-500" /> {t('hero.windows')}</span>
+              <span className="inline-flex items-center gap-1.5"><Languages className="h-4 w-4 text-brand-500" /> {t('hero.bilingual')}</span>
             </div>
           </Reveal>
 
@@ -100,10 +102,10 @@ export default function Home(): JSX.Element {
         {/* Stats bar */}
         <div className="container-page relative pb-16">
           <div className="grid grid-cols-2 gap-4 rounded-3xl border border-slate-200 bg-white/70 p-6 shadow-sm backdrop-blur sm:grid-cols-4">
-            <Stat value={stats ? fmt(stats.downloads) + '+' : '—'} label="Downloads" />
-            <Stat value={stats ? fmt(stats.schools) : '—'} label="Schools onboard" />
-            <Stat value={stats ? fmt(stats.students) + '+' : '—'} label="Students managed" />
-            <Stat value="100%" label="Offline capable" />
+            <Stat value={stats ? fmt(stats.downloads) + '+' : '—'} label={t('stats.downloads')} />
+            <Stat value={stats ? fmt(stats.schools) : '—'} label={t('stats.schools')} />
+            <Stat value={stats ? fmt(stats.students) + '+' : '—'} label={t('stats.students')} />
+            <Stat value="100%" label={t('stats.offline')} />
           </div>
         </div>
       </section>
@@ -112,8 +114,8 @@ export default function Home(): JSX.Element {
       <section className="bg-slate-50 py-20">
         <div className="container-page">
           <SectionHeader
-            eyebrow="Everything in one place"
-            title="Built for how schools actually work"
+            eyebrow={t('features.eyebrow')}
+            title={t('features.title')}
             subtitle="One installation covers the entire school office — no monthly fees, no internet dependency, no data leaving your computer."
           />
           <div className="mt-14 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -136,8 +138,8 @@ export default function Home(): JSX.Element {
       <section className="py-20">
         <div className="container-page">
           <SectionHeader
-            eyebrow="Get started in minutes"
-            title="From download to your first report card"
+            eyebrow={t('steps.eyebrow')}
+            title={t('steps.title')}
             subtitle="No servers to configure, no technical skills required. Download, install with the guide, and you are running."
           />
           <div className="mt-14 grid gap-6 md:grid-cols-4">

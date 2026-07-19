@@ -8,6 +8,7 @@ import Contact from './pages/Contact'
 import FounderLogin from './pages/FounderLogin'
 import FounderDashboard from './pages/FounderDashboard'
 import { api } from './lib/api'
+import { LanguageProvider } from './lib/i18n'
 
 function ScrollManager(): null {
   const { pathname, hash } = useLocation()
@@ -42,7 +43,7 @@ function RequireFounder({ children }: { children: JSX.Element }): JSX.Element {
 
 export default function App(): JSX.Element {
   return (
-    <>
+    <LanguageProvider>
       <ScrollManager />
       <Routes>
         <Route element={<PublicLayout />}>
@@ -61,6 +62,6 @@ export default function App(): JSX.Element {
         />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-    </>
+    </LanguageProvider>
   )
 }
