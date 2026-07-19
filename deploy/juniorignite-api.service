@@ -1,0 +1,40 @@
+# JuniorIgnite API — systemd unit for a free-tier EC2 instance.
+#
+# Install:
+#   sudo cp deploy/juniorignite-api.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now juniorignite-api
+#   sudo systemctl status juniorignite-api
+
+[Unit]
+Description=JuniorIgnite API
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/opt/juniorignite/server
+EnvironmentFile=/opt/juniorignite/server/.env
+ExecStart=/usr/bin/node dist/index.js
+Restart=always
+RestartSec=3
+
+# The JSON database lives here, outside the deploy folder, so redeploying the
+# app never destroys the founder account, contacts or download counts.
+StateDirectory=juniorignite
+Environment=DATA_DIR=/var/lib/juniorignite
+Environment=NODE_ENV=production
+
+# Hardening — the API only ever needs to read its code and write its data dir.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/juniorignite
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=juniorignite-api
+
+[Install]
+WantedBy=multi-user.target

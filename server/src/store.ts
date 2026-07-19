@@ -37,7 +37,9 @@ interface DB {
   seq: number
 }
 
-const DATA_DIR = path.resolve(process.cwd(), 'data')
+// Override with DATA_DIR on the server so the database lives outside the deploy
+// folder (e.g. /var/lib/juniorignite) and survives redeploys.
+const DATA_DIR = process.env.DATA_DIR ? path.resolve(process.env.DATA_DIR) : path.resolve(process.cwd(), 'data')
 const DB_FILE = path.join(DATA_DIR, 'db.json')
 
 let db: DB
@@ -45,6 +47,15 @@ let db: DB
 function seed(): DB {
   const email = process.env.FOUNDER_EMAIL ?? 'founder@juniorignite.app'
   const password = process.env.FOUNDER_PASSWORD ?? 'founder123'
+  // The founder account is created once, on first boot. Creating it with the
+  // documented default password on a public server is an open door.
+  if (process.env.NODE_ENV === 'production' && password === 'founder123') {
+    console.error(
+      '\nFATAL: FOUNDER_PASSWORD is still the default "founder123".\n' +
+        'Set a strong FOUNDER_PASSWORD before first start (it is hashed on seed).\n'
+    )
+    process.exit(1)
+  }
   const { salt, hash } = hashPassword(password)
 
   const REGIONS = ['North West', 'South West', 'Centre', 'Littoral', 'West', 'Far North']
