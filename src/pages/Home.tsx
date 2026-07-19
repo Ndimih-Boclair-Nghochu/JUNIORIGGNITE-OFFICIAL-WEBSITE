@@ -93,7 +93,7 @@ export default function Home(): JSX.Element {
           </Reveal>
 
           <Reveal delay={120}>
-            <AppWindowMock stats={stats} />
+            <AppWindowMock />
           </Reveal>
         </div>
 
@@ -271,13 +271,16 @@ function Stat({ value, label }: { value: string; label: string }): JSX.Element {
   )
 }
 
-/** A stylised faux app window used as the hero illustration. */
-function AppWindowMock({ stats }: { stats: PublicStats | null }): JSX.Element {
+/**
+ * A stylised illustration of the app window. Deliberately shows no figures —
+ * it depicts the interface, it does not claim any real usage numbers.
+ */
+function AppWindowMock(): JSX.Element {
   const tiles = [
-    { label: 'Students', value: stats ? Math.min(stats.students, 428) : 428, color: 'bg-brand-500' },
-    { label: 'Teachers', value: 24, color: 'bg-accent-500' },
-    { label: 'Classes', value: 12, color: 'bg-brand-400' },
-    { label: 'Attendance', value: '96%', color: 'bg-accent-400' }
+    { label: 'Students', value: '—', color: 'bg-brand-500' },
+    { label: 'Teachers', value: '—', color: 'bg-accent-500' },
+    { label: 'Classes', value: '—', color: 'bg-brand-400' },
+    { label: 'Attendance', value: '—', color: 'bg-accent-400' }
   ]
   const bars = [45, 70, 55, 85, 60, 92, 74]
   return (
@@ -305,7 +308,7 @@ function AppWindowMock({ stats }: { stats: PublicStats | null }): JSX.Element {
         <div className="mt-4 rounded-xl border border-slate-100 p-4">
           <div className="mb-3 flex items-center justify-between">
             <span className="text-xs font-semibold text-ink-soft">Enrolment this term</span>
-            <span className="text-[11px] text-brand-600">▲ 12%</span>
+            
           </div>
           <div className="flex h-24 items-end gap-2">
             {bars.map((h, i) => (

@@ -26,6 +26,8 @@ import {
   Building2
 } from 'lucide-react'
 import { Logo } from '@/components/Logo'
+import { StatsEditor } from '@/components/founder/StatsEditor'
+import { LicenseManager } from '@/components/founder/LicenseManager'
 import { api, usingMock } from '@/lib/api'
 import type { FounderOverview, SchoolRow } from '@/lib/types'
 
@@ -168,6 +170,12 @@ export default function FounderDashboard(): JSX.Element {
                   </ResponsiveContainer>
                 </div>
               </div>
+            </div>
+
+            {/* Founder-entered public figures + licence issuing */}
+            <div className="mt-6 grid gap-6">
+              <StatsEditor />
+              <LicenseManager />
             </div>
 
             {/* Schools table */}

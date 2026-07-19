@@ -1,6 +1,14 @@
 import { API_BASE, SITE } from './config'
 import { mockOverview, mockPublicStats, makeSchools } from './mock'
-import type { ContactPayload, FounderOverview, PublicStats, SchoolRow } from './types'
+import type {
+  ContactPayload,
+  FounderOverview,
+  PublicStats,
+  SchoolRow,
+  PublicStatsInput,
+  LicenseRow,
+  ContactMsg
+} from './types'
 
 const FOUNDER_TOKEN_KEY = 'ji_founder_token'
 
@@ -107,5 +115,30 @@ export const api = {
       const row = makeSchools().find((s) => s.id === id)!
       return { ...row, ...patch }
     }
-  }
+  },
+
+  // ---- Founder-entered public statistics ----
+  founderStats: (): Promise<PublicStatsInput> => req<PublicStatsInput>('/api/founder/stats'),
+
+  saveFounderStats: (stats: { schools: number; students: number; activeUsers: number }): Promise<PublicStatsInput> =>
+    req<PublicStatsInput>('/api/founder/stats', { method: 'PUT', body: JSON.stringify(stats) }),
+
+  // ---- Licence records (signing key stays offline) ----
+  licenses: (): Promise<LicenseRow[]> => req<LicenseRow[]>('/api/founder/licenses'),
+
+  createLicense: (payload: {
+    schoolName: string
+    schoolId: string
+    deviceId: string
+    expiresAt?: string
+    notes?: string
+  }): Promise<LicenseRow> => req<LicenseRow>('/api/founder/licenses', { method: 'POST', body: JSON.stringify(payload) }),
+
+  updateLicense: (id: number, patch: { code?: string; expiresAt?: string; notes?: string }): Promise<LicenseRow> =>
+    req<LicenseRow>(`/api/founder/licenses/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+
+  deleteLicense: (id: number): Promise<{ ok: true }> =>
+    req<{ ok: true }>(`/api/founder/licenses/${id}`, { method: 'DELETE' }),
+
+  contacts: (): Promise<ContactMsg[]> => req<ContactMsg[]>('/api/founder/contacts')
 }

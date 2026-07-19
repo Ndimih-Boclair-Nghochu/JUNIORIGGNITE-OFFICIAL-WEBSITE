@@ -28,11 +28,43 @@ export interface ContactMsg {
   createdAt: string
 }
 
+/**
+ * Headline figures shown on the public site. These are entered by the founder —
+ * schools run offline, so the server cannot count them itself. Downloads are the
+ * exception: those are counted automatically from the site's download button.
+ */
+export interface PublicStatsRow {
+  schools: number
+  students: number
+  activeUsers: number
+  updatedAt: string | null
+}
+
+/**
+ * A licence issued to one school. The Ed25519 private key never touches this
+ * server — the founder records the school's School ID + Device ID here, runs
+ * tools/license-gen offline, and pastes the signed code back for record-keeping.
+ */
+export interface LicenseRow {
+  id: number
+  schoolName: string
+  schoolId: string
+  deviceId: string
+  /** The signed activation code, once generated offline. Null until issued. */
+  code: string | null
+  expiresAt: string | null
+  createdAt: string
+  issuedAt: string | null
+  notes: string | null
+}
+
 interface DB {
   downloads: number
   downloadEvents: { ts: string }[]
   schools: SchoolRow[]
   contacts: ContactMsg[]
+  licenses: LicenseRow[]
+  stats: PublicStatsRow
   founder: { email: string; salt: string; hash: string }
   seq: number
 }
@@ -58,51 +90,18 @@ function seed(): DB {
   }
   const { salt, hash } = hashPassword(password)
 
-  const REGIONS = ['North West', 'South West', 'Centre', 'Littoral', 'West', 'Far North']
-  const NAMES = [
-    'Sunrise Bilingual Nursery & Primary',
-    'St. Andrews Primary School',
-    'Little Scholars Academy',
-    'Grace Bilingual College',
-    'Foumban Community Primary',
-    'Buea Mountain Nursery',
-    'Douala Rise Academy',
-    'Bafoussam Star Primary',
-    'Kumba Unity School',
-    'Bright Future Nursery',
-    'Green Valley Primary',
-    'Cornerstone Bilingual School'
-  ]
-  const now = Date.now()
-  const schools: SchoolRow[] = NAMES.map((name, i) => ({
-    id: 101 + i,
-    key: crypto.randomUUID(),
-    name,
-    region: REGIONS[i % REGIONS.length],
-    subdivision: null,
-    students: 60 + ((i * 47) % 380),
-    teachers: 4 + ((i * 3) % 18),
-    activeUsers: 1 + ((4 + ((i * 3) % 18)) % 6),
-    status: i % 7 === 0 ? 'suspended' : 'active',
-    reportCardsAllowed: i % 3 !== 0,
-    licenseExpiresAt: new Date(now + (30 + i * 12) * 86400000).toISOString(),
-    lastSeenAt: new Date(now - (i % 5) * 86400000).toISOString(),
-    createdAt: new Date(now - (i * 9 + 5) * 86400000).toISOString()
-  }))
-
-  const downloadEvents: { ts: string }[] = []
-  for (let d = 13; d >= 0; d--) {
-    const count = 40 + Math.round(60 * Math.abs(Math.sin(d / 2))) + (d % 3) * 8
-    for (let j = 0; j < count; j++) downloadEvents.push({ ts: new Date(now - d * 86400000).toISOString() })
-  }
-
+  // A brand-new installation starts completely empty. Nothing is invented:
+  // downloads are counted for real from the site's download button, and the
+  // headline figures are entered by the founder from the console.
   return {
-    downloads: downloadEvents.length + 100,
-    downloadEvents,
-    schools,
+    downloads: 0,
+    downloadEvents: [],
+    schools: [],
     contacts: [],
+    licenses: [],
+    stats: { schools: 0, students: 0, activeUsers: 0, updatedAt: null },
     founder: { email, salt, hash },
-    seq: 200
+    seq: 1
   }
 }
 
@@ -110,10 +109,32 @@ export function load(): void {
   if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true })
   if (fs.existsSync(DB_FILE)) {
     db = JSON.parse(fs.readFileSync(DB_FILE, 'utf8'))
+    // Backfill fields added after this database was first written, so an
+    // existing deployment keeps working without manual intervention.
+    db.licenses ??= []
+    db.stats ??= { schools: 0, students: 0, activeUsers: 0, updatedAt: null }
+    db.contacts ??= []
+    db.schools ??= []
+    db.downloadEvents ??= []
   } else {
     db = seed()
     save()
   }
+}
+
+/**
+ * Wipes every record but keeps the founder account. Used by the console's
+ * "reset demo data" action so a site can be taken from demo to live cleanly.
+ */
+export function resetData(): void {
+  db.downloads = 0
+  db.downloadEvents = []
+  db.schools = []
+  db.contacts = []
+  db.licenses = []
+  db.stats = { schools: 0, students: 0, activeUsers: 0, updatedAt: null }
+  db.seq = 1
+  save()
 }
 
 export function save(): void {

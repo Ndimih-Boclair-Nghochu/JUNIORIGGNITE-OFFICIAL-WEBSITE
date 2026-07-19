@@ -1,6 +1,6 @@
 import express, { type Request, type Response, type NextFunction } from 'express'
 import cors from 'cors'
-import { load, save, get, nextId, downloadsByDay, type SchoolRow } from './store.js'
+import { load, save, get, nextId, downloadsByDay, resetData, type SchoolRow, type LicenseRow } from './store.js'
 import { signToken, verifyToken, verifyPassword } from './auth.js'
 
 load()
@@ -51,13 +51,19 @@ const clean = (v: unknown, max: number): string => String(v ?? '').trim().slice(
 const INSTALLER_URL = process.env.INSTALLER_URL ?? '/downloads/JuniorIgnite-Setup-1.1.2.exe'
 const APP_VERSION = process.env.APP_VERSION ?? '1.1.2'
 
+/**
+ * Headline numbers. Downloads are counted for real by this server; the school /
+ * student / user figures are entered by the founder, because schools run fully
+ * offline and never report in. Nothing here is invented.
+ */
 const totals = () => {
-  const s = get().schools
+  const db = get()
+  const s = db.schools
   return {
-    downloads: get().downloads,
-    schools: s.length,
-    students: s.reduce((a, r) => a + r.students, 0),
-    activeUsers: s.reduce((a, r) => a + r.activeUsers, 0),
+    downloads: db.downloads,
+    schools: db.stats.schools,
+    students: db.stats.students,
+    activeUsers: db.stats.activeUsers,
     schoolsActive: s.filter((r) => r.status === 'active').length,
     schoolsSuspended: s.filter((r) => r.status === 'suspended').length
   }
@@ -69,6 +75,19 @@ app.get('/api/health', (_req, res) => res.json({ ok: true }))
 app.get('/api/stats/public', (_req, res) => {
   const t = totals()
   res.json({ downloads: t.downloads, schools: t.schools, students: t.students, activeUsers: t.activeUsers })
+})
+
+/**
+ * Latest desktop release. Installed apps poll this to decide whether to show
+ * their "Update available" button, which sends the school to the download page.
+ */
+app.get('/api/version', (_req, res) => {
+  res.json({
+    version: APP_VERSION,
+    downloadUrl: INSTALLER_URL,
+    // Where the app should send the user to get the update.
+    siteUrl: process.env.SITE_URL ?? ''
+  })
 })
 
 app.post('/api/download', rateLimit(30, 60_000), (_req, res) => {
@@ -173,6 +192,96 @@ app.get('/api/founder/overview', requireFounder, (_req, res) => {
 
 app.get('/api/founder/schools', requireFounder, (_req, res) => {
   res.json(get().schools)
+})
+
+// ---- Founder-entered public statistics ----
+app.get('/api/founder/stats', requireFounder, (_req, res) => {
+  res.json(get().stats)
+})
+
+app.put('/api/founder/stats', requireFounder, (req, res) => {
+  const db = get()
+  const num = (v: unknown, current: number): number => {
+    const n = Number(v)
+    return Number.isFinite(n) && n >= 0 ? Math.round(n) : current
+  }
+  db.stats = {
+    schools: num(req.body?.schools, db.stats.schools),
+    students: num(req.body?.students, db.stats.students),
+    activeUsers: num(req.body?.activeUsers, db.stats.activeUsers),
+    updatedAt: new Date().toISOString()
+  }
+  save()
+  res.json(db.stats)
+})
+
+// ---- Licence records ----
+// The Ed25519 private key is NOT on this server by design. The founder records
+// a school's identifiers here, generates the signed code offline with
+// tools/license-gen, then pastes it back so there is a record of what was issued.
+app.get('/api/founder/licenses', requireFounder, (_req, res) => {
+  res.json([...get().licenses].sort((a, b) => (b.createdAt > a.createdAt ? 1 : -1)))
+})
+
+app.post('/api/founder/licenses', requireFounder, (req, res) => {
+  const schoolName = clean(req.body?.schoolName, 160)
+  const schoolId = clean(req.body?.schoolId, 64)
+  const deviceId = clean(req.body?.deviceId, 128)
+  if (!schoolName || !schoolId || !deviceId) {
+    return res.status(400).json({ error: 'School name, School ID and Device ID are all required.' })
+  }
+  const db = get()
+  const row: LicenseRow = {
+    id: nextId(),
+    schoolName,
+    schoolId,
+    deviceId,
+    code: null,
+    expiresAt: clean(req.body?.expiresAt, 40) || null,
+    createdAt: new Date().toISOString(),
+    issuedAt: null,
+    notes: clean(req.body?.notes, 500) || null
+  }
+  db.licenses.push(row)
+  save()
+  res.json(row)
+})
+
+app.patch('/api/founder/licenses/:id', requireFounder, (req, res) => {
+  const row = get().licenses.find((l) => l.id === Number(req.params.id))
+  if (!row) return res.status(404).json({ error: 'Licence record not found' })
+  if (req.body?.code !== undefined) {
+    const code = clean(req.body.code, 2000)
+    row.code = code || null
+    row.issuedAt = code ? new Date().toISOString() : null
+  }
+  if (req.body?.expiresAt !== undefined) row.expiresAt = clean(req.body.expiresAt, 40) || null
+  if (req.body?.notes !== undefined) row.notes = clean(req.body.notes, 500) || null
+  save()
+  res.json(row)
+})
+
+app.delete('/api/founder/licenses/:id', requireFounder, (req, res) => {
+  const db = get()
+  const i = db.licenses.findIndex((l) => l.id === Number(req.params.id))
+  if (i === -1) return res.status(404).json({ error: 'Licence record not found' })
+  db.licenses.splice(i, 1)
+  save()
+  res.json({ ok: true })
+})
+
+// ---- Contact inbox ----
+app.get('/api/founder/contacts', requireFounder, (_req, res) => {
+  res.json([...get().contacts].sort((a, b) => (b.createdAt > a.createdAt ? 1 : -1)))
+})
+
+// ---- Danger zone: wipe everything except the founder account ----
+app.post('/api/founder/reset', requireFounder, (req, res) => {
+  if (req.body?.confirm !== 'RESET') {
+    return res.status(400).json({ error: 'Send { "confirm": "RESET" } to confirm.' })
+  }
+  resetData()
+  res.json({ ok: true })
 })
 
 app.patch('/api/founder/schools/:id', requireFounder, (req, res) => {

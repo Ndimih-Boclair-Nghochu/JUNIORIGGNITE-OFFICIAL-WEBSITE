@@ -25,7 +25,8 @@ import type {
   LicenseInfo,
   RegistrationInfo,
   ActivationResult,
-  StartupNotices
+  StartupNotices,
+  UpdateInfo
 } from './types'
 
 // Type-only contract for window.api, shared between the preload bridge and
@@ -49,6 +50,8 @@ export interface JuniorIgniteApi {
     }) => Promise<ApiResult<{ classCodes: Record<string, string> }>>
     integrityStatus: () => Promise<ApiResult<{ ok: boolean }>>
     quit: () => Promise<ApiResult<null>>
+    checkUpdate: () => Promise<ApiResult<UpdateInfo>>
+    openExternal: (payload: { url: string }) => Promise<ApiResult<null>>
   }
   auth: {
     adminLogin: (payload: { username: string; password: string }) => Promise<ApiResult<Session>>
