@@ -7,6 +7,8 @@ export const IPC = {
   APP_FIRST_RUN_SETUP: 'app:firstRunSetup',
   APP_INTEGRITY_STATUS: 'app:integrityStatus',
   APP_QUIT: 'app:quit',
+  APP_CHECK_UPDATE: 'app:checkUpdate',
+  APP_OPEN_EXTERNAL: 'app:openExternal',
 
   // Auth / session
   AUTH_ADMIN_LOGIN: 'auth:adminLogin',

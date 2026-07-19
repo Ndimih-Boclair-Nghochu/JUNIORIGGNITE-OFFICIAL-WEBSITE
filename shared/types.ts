@@ -254,6 +254,18 @@ export interface LicenseInfo {
   feeTotalXaf: number
 }
 
+/** Result of checking the JuniorIgnite website for a newer release. */
+export interface UpdateInfo {
+  /** True when the site advertises a version newer than the one installed. */
+  updateAvailable: boolean
+  currentVersion: string
+  latestVersion: string | null
+  /** Where to send the user to download it. */
+  downloadPageUrl: string
+  /** False when the site could not be reached (offline) — never treated as an error. */
+  checked: boolean
+}
+
 /** School identity shown at setup so the school can obtain its first code. */
 export interface RegistrationInfo {
   schoolId: string

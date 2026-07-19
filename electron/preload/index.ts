@@ -13,7 +13,9 @@ const api = {
     getState: () => invoke(IPC.APP_GET_STATE),
     firstRunSetup: (payload: unknown) => invoke(IPC.APP_FIRST_RUN_SETUP, payload),
     integrityStatus: () => invoke(IPC.APP_INTEGRITY_STATUS),
-    quit: () => invoke(IPC.APP_QUIT)
+    quit: () => invoke(IPC.APP_QUIT),
+    checkUpdate: () => invoke(IPC.APP_CHECK_UPDATE),
+    openExternal: (payload: { url: string }) => invoke(IPC.APP_OPEN_EXTERNAL, payload)
   },
   auth: {
     adminLogin: (payload: { username: string; password: string }) => invoke(IPC.AUTH_ADMIN_LOGIN, payload),

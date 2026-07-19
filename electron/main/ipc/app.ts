@@ -1,6 +1,19 @@
-import { app, ipcMain } from 'electron'
+import { app, ipcMain, shell } from 'electron'
 import { IPC } from '@shared/ipcChannels'
-import type { ApiResult, School, Language } from '@shared/types'
+import type { ApiResult, School, Language, UpdateInfo } from '@shared/types'
+import { WEBSITE_URL } from '@shared/constants'
+
+/** True when `a` is a higher semantic version than `b` (e.g. 1.2.0 > 1.1.9). */
+function isNewer(a: string, b: string): boolean {
+  const pa = a.split('.').map((n) => parseInt(n, 10) || 0)
+  const pb = b.split('.').map((n) => parseInt(n, 10) || 0)
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    const x = pa[i] ?? 0
+    const y = pb[i] ?? 0
+    if (x !== y) return x > y
+  }
+  return false
+}
 import { getDb, getIntegrityStatus, getDeviceId } from '../db/connection'
 import { seedDemoData } from '../db/seed'
 import { hashSecret } from '../services/auth'
@@ -67,6 +80,53 @@ export function registerAppHandlers(): void {
   ipcMain.handle(IPC.APP_QUIT, (): ApiResult<null> => {
     app.quit()
     return { ok: true, data: null }
+  })
+
+  /**
+   * Asks the JuniorIgnite website whether a newer version exists. This is the
+   * ONLY outbound call the app makes — no school data leaves the machine. Being
+   * offline is normal, not an error: it simply reports checked:false.
+   */
+  ipcMain.handle(IPC.APP_CHECK_UPDATE, async (): Promise<ApiResult<UpdateInfo>> => {
+    const currentVersion = app.getVersion()
+    const downloadPageUrl = WEBSITE_URL
+    try {
+      const controller = new AbortController()
+      const timer = setTimeout(() => controller.abort(), 6000)
+      const res = await fetch(`${WEBSITE_URL}/api/version`, { signal: controller.signal })
+      clearTimeout(timer)
+      if (!res.ok) throw new Error(String(res.status))
+      const body = (await res.json()) as { version?: string }
+      const latestVersion = body?.version ?? null
+      return {
+        ok: true,
+        data: {
+          updateAvailable: !!latestVersion && isNewer(latestVersion, currentVersion),
+          currentVersion,
+          latestVersion,
+          downloadPageUrl,
+          checked: true
+        }
+      }
+    } catch {
+      // Offline or the site is down — never surface this as a failure.
+      return {
+        ok: true,
+        data: { updateAvailable: false, currentVersion, latestVersion: null, downloadPageUrl, checked: false }
+      }
+    }
+  })
+
+  /** Opens a link in the user's real browser (used by the Update button). */
+  ipcMain.handle(IPC.APP_OPEN_EXTERNAL, async (_e, { url }: { url: string }): Promise<ApiResult<null>> => {
+    try {
+      // Only ever open our own site — never an arbitrary URL from the renderer.
+      if (!url.startsWith(WEBSITE_URL)) return { ok: false, error: 'Refused to open an external link.' }
+      await shell.openExternal(url)
+      return { ok: true, data: null }
+    } catch (err: any) {
+      return { ok: false, error: err.message }
+    }
   })
 
   ipcMain.handle(
