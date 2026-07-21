@@ -232,7 +232,7 @@ export default function Home(): JSX.Element {
                 <div className="rounded-2xl bg-white/10 p-6 backdrop-blur">
                   <h4 className="text-sm font-bold uppercase tracking-wider text-brand-100">What you get</h4>
                   <ul className="mt-4 space-y-3 text-sm">
-                    {['The full desktop application', 'Printable step-by-step setup guide', 'Video installation walkthrough', 'Demo data to explore instantly', 'Free lifetime local use'].map((t) => (
+                    {['The full desktop application', 'Printable step-by-step setup guide', 'Video installation walkthrough', 'Guided first-time school setup', 'Free lifetime local use'].map((t) => (
                       <li key={t} className="flex items-center gap-3">
                         <CheckCircle2 className="h-5 w-5 shrink-0 text-accent-300" /> {t}
                       </li>

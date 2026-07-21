@@ -118,7 +118,7 @@ export default function About(): JSX.Element {
         <div className="container-page flex flex-col items-center justify-between gap-6 rounded-3xl border border-slate-200 bg-slate-50 p-10 text-center md:flex-row md:text-left">
           <div>
             <h3 className="text-2xl font-extrabold text-ink">Try {SITE.name} at your school</h3>
-            <p className="mt-2 text-ink-muted">Download the app, install it in minutes, and explore with built-in demo data.</p>
+            <p className="mt-2 text-ink-muted">Download the app, install it in minutes, and set up your school with your own classes and pupils.</p>
           </div>
           <div className="flex gap-3">
             <DownloadButton className="btn-primary" label="Download the app" />
