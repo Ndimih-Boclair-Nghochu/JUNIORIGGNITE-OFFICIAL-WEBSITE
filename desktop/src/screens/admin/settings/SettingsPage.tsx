@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Loader2, ImagePlus, Save, KeyRound } from 'lucide-react'
+import { Loader2, ImagePlus, Save, KeyRound, ShieldQuestion } from 'lucide-react'
 import { useAppStore } from '../../../store/appStore'
+import { SECURITY_QUESTIONS } from '../../setup-wizard/SetupWizard'
 import i18n from '../../../i18n'
 import type { School, Language } from '@shared/types'
 
@@ -160,9 +161,98 @@ export default function SettingsPage(): JSX.Element {
         </div>
       </div>
 
-      <div className="mt-6 max-w-2xl">
+      <div className="mt-6 max-w-2xl space-y-6">
         <ChangePasswordCard />
+        <SecurityQuestionCard />
       </div>
+    </div>
+  )
+}
+
+/** Lets the admin change the question used for offline password recovery. */
+function SecurityQuestionCard(): JSX.Element {
+  const { t } = useTranslation()
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [question, setQuestion] = useState(SECURITY_QUESTIONS[0])
+  const [answer, setAnswer] = useState('')
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
+  const [saving, setSaving] = useState(false)
+
+  async function save(): Promise<void> {
+    setSaving(true)
+    const res = await window.api.auth.setSecurityQuestion({ currentPassword, question, answer })
+    setSaving(false)
+    if (res.ok) {
+      setMsg({ ok: true, text: t('auth.securityCardSaved') })
+      setCurrentPassword('')
+      setAnswer('')
+    } else {
+      setMsg({ ok: false, text: res.error ?? 'Failed.' })
+    }
+  }
+
+  const isCustom = !SECURITY_QUESTIONS.includes(question)
+
+  return (
+    <div className="card space-y-4">
+      <h2 className="flex items-center gap-2 text-lg font-semibold text-slate-800">
+        <ShieldQuestion className="h-5 w-5 text-slate-400" />
+        {t('auth.securityCardTitle')}
+      </h2>
+      <p className="text-sm text-slate-500">{t('auth.securityCardIntro')}</p>
+      {msg && (
+        <div
+          className={
+            'rounded-xl px-4 py-2.5 text-sm ' + (msg.ok ? 'bg-brand-50 text-brand-700' : 'bg-red-50 text-red-700')
+          }
+        >
+          {msg.text}
+        </div>
+      )}
+      <div>
+        <label className="label-field">{t('setup.securityQuestion')}</label>
+        <select
+          className="input-field"
+          value={isCustom ? '__custom' : question}
+          onChange={(e) => setQuestion(e.target.value === '__custom' ? '' : e.target.value)}
+        >
+          {SECURITY_QUESTIONS.map((q) => (
+            <option key={q} value={q}>
+              {q}
+            </option>
+          ))}
+          <option value="__custom">{t('setup.securityCustom')}</option>
+        </select>
+        {isCustom && (
+          <input
+            className="input-field mt-2"
+            placeholder={t('setup.securityCustomPlaceholder')}
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+          />
+        )}
+      </div>
+      <div>
+        <label className="label-field">{t('setup.securityAnswer')}</label>
+        <input className="input-field" value={answer} onChange={(e) => setAnswer(e.target.value)} />
+      </div>
+      <div>
+        <label className="label-field">{t('auth.password')}</label>
+        <input
+          type="password"
+          className="input-field"
+          value={currentPassword}
+          onChange={(e) => setCurrentPassword(e.target.value)}
+        />
+      </div>
+      <button
+        className="btn-primary"
+        onClick={save}
+        disabled={saving || !currentPassword || !answer.trim() || !question.trim()}
+      >
+        {saving && <Loader2 className="h-4 w-4 animate-spin" />}
+        {t('common.save')}
+      </button>
     </div>
   )
 }

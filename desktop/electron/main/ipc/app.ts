@@ -15,8 +15,9 @@ function isNewer(a: string, b: string): boolean {
   return false
 }
 import { getDb, getIntegrityStatus, getDeviceId } from '../db/connection'
-import { seedDemoData } from '../db/seed'
+import { initialiseAcademicSession } from '../db/seed'
 import { hashSecret } from '../services/auth'
+import { normaliseAnswer } from './auth'
 import { logActivity } from '../services/activityLog'
 import { issueInitialLicense } from '../services/license'
 import { sessionManager } from '../session/sessionManager'
@@ -34,6 +35,8 @@ interface FirstRunPayload {
   logoPath: string | null
   adminUsername: string
   adminPassword: string
+  securityQuestion: string
+  securityAnswer: string
 }
 
 function mapSchool(row: any): School {
@@ -142,6 +145,10 @@ export function registerAppHandlers(): void {
         }
 
         const passwordHash = await hashSecret(payload.adminPassword)
+        // Security answer enables offline password recovery (no email available).
+        const securityAnswerHash = payload.securityAnswer?.trim()
+          ? await hashSecret(normaliseAnswer(payload.securityAnswer))
+          : null
         const deviceId = getDeviceId()
 
         const setup = db.transaction(() => {
@@ -166,14 +173,27 @@ export function registerAppHandlers(): void {
             deviceId
           })
 
-          db.prepare(`INSERT INTO admins (username, password_hash) VALUES (?, ?)`).run(
+          db.prepare(
+            `INSERT INTO admins (username, password_hash, security_question, security_answer_hash)
+             VALUES (?, ?, ?, ?)`
+          ).run(
             payload.adminUsername,
-            passwordHash
+            passwordHash,
+            payload.securityQuestion?.trim() || null,
+            securityAnswerHash
           )
         })
         setup()
 
-        const { classCodes } = await seedDemoData(db)
+        // A new school starts completely empty — no sample classes, teachers or
+        // pupils. Only the academic calendar is created so terms exist.
+        initialiseAcademicSession(db)
+        const classCodes: Record<string, string> = {}
+
+        // Assign the permanent School ID and issue the first-year provisional
+        // license so the app is fully usable straight after setup (renewal then
+        // needs a signed ELIGNITE activation code).
+        issueInitialLicense()
 
         // Assign the permanent School ID and issue the first-year provisional
         // license so the app is fully usable straight after setup (renewal then

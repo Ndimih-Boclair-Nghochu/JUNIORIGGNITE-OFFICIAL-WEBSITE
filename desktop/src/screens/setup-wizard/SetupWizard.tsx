@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ImagePlus, CheckCircle2, Loader2, LogIn } from 'lucide-react'
+import { ImagePlus, CheckCircle2, Loader2, LogIn, KeyRound } from 'lucide-react'
 import { Logo } from '../../components/Logo'
 import { useAppStore } from '../../store/appStore'
 import { useAuthStore } from '../../store/authStore'
@@ -23,7 +23,18 @@ interface FormState {
   adminUsername: string
   adminPassword: string
   adminPasswordConfirm: string
+  securityQuestion: string
+  securityAnswer: string
 }
+
+/** Offered as a starting point; the admin can type their own question. */
+export const SECURITY_QUESTIONS = [
+  'What is the name of the school founder?',
+  'In which town was the school founded?',
+  'What was the name of your first head teacher?',
+  "What is your mother's maiden name?",
+  'What was the name of your primary school?'
+]
 
 const initialForm: FormState = {
   name: '',
@@ -38,7 +49,9 @@ const initialForm: FormState = {
   language: 'en',
   adminUsername: '',
   adminPassword: '',
-  adminPasswordConfirm: ''
+  adminPasswordConfirm: '',
+  securityQuestion: SECURITY_QUESTIONS[0],
+  securityAnswer: ''
 }
 
 export default function SetupWizard(): JSX.Element {
@@ -98,6 +111,11 @@ export default function SetupWizard(): JSX.Element {
       setError(t('setup.passwordMismatch'))
       return false
     }
+    // Required: it is the only way to recover a forgotten password offline.
+    if (!form.securityQuestion.trim() || !form.securityAnswer.trim()) {
+      setError(t('setup.securityRequired'))
+      return false
+    }
     setError(null)
     return true
   }
@@ -117,7 +135,9 @@ export default function SetupWizard(): JSX.Element {
       language: form.language,
       logoPath: form.logoPath,
       adminUsername: form.adminUsername,
-      adminPassword: form.adminPassword
+      adminPassword: form.adminPassword,
+      securityQuestion: form.securityQuestion,
+      securityAnswer: form.securityAnswer
     })
     setSubmitting(false)
     if (!res.ok) {
@@ -331,6 +351,51 @@ export default function SetupWizard(): JSX.Element {
                   onChange={(e) => update('adminPasswordConfirm', e.target.value)}
                 />
               </div>
+
+              {/* Offline password recovery — there is no email on this device. */}
+              <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-4">
+                <div className="flex items-start gap-2">
+                  <KeyRound className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+                  <p className="text-xs text-amber-800">{t('setup.securityIntro')}</p>
+                </div>
+                <div className="mt-3 space-y-3">
+                  <div>
+                    <label className="label-field">{t('setup.securityQuestion')}</label>
+                    <select
+                      className="input-field"
+                      value={SECURITY_QUESTIONS.includes(form.securityQuestion) ? form.securityQuestion : '__custom'}
+                      onChange={(e) =>
+                        update('securityQuestion', e.target.value === '__custom' ? '' : e.target.value)
+                      }
+                    >
+                      {SECURITY_QUESTIONS.map((q) => (
+                        <option key={q} value={q}>
+                          {q}
+                        </option>
+                      ))}
+                      <option value="__custom">{t('setup.securityCustom')}</option>
+                    </select>
+                    {!SECURITY_QUESTIONS.includes(form.securityQuestion) && (
+                      <input
+                        className="input-field mt-2"
+                        placeholder={t('setup.securityCustomPlaceholder')}
+                        value={form.securityQuestion}
+                        onChange={(e) => update('securityQuestion', e.target.value)}
+                      />
+                    )}
+                  </div>
+                  <div>
+                    <label className="label-field">{t('setup.securityAnswer')}</label>
+                    <input
+                      className="input-field"
+                      value={form.securityAnswer}
+                      onChange={(e) => update('securityAnswer', e.target.value)}
+                    />
+                    <p className="mt-1 text-xs text-slate-500">{t('setup.securityAnswerHint')}</p>
+                  </div>
+                </div>
+              </div>
+
               <div className="flex justify-between pt-2">
                 <button className="btn-secondary" onClick={() => setStep('school')}>
                   {t('common.back')}
