@@ -7,6 +7,7 @@ import { useAuthStore } from '../../store/authStore'
 import { SchoolBadge } from '../../components/SchoolBadge'
 import { Modal } from '../../components/Modal'
 import { EmptyState } from '../../components/EmptyState'
+import { ForgotPasswordModal } from '../../components/ForgotPasswordModal'
 import type { SchoolClass } from '@shared/types'
 
 /**
@@ -147,6 +148,7 @@ function AdminLoginModal({ onClose }: { onClose: () => void }): JSX.Element {
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [showForgot, setShowForgot] = useState(false)
 
   async function handleSubmit(e: React.FormEvent): Promise<void> {
     e.preventDefault()
@@ -160,6 +162,8 @@ function AdminLoginModal({ onClose }: { onClose: () => void }): JSX.Element {
     }
     navigate('/admin')
   }
+
+  if (showForgot) return <ForgotPasswordModal onClose={() => setShowForgot(false)} />
 
   return (
     <Modal title={t('landing.adminLogin')} onClose={onClose}>
@@ -181,6 +185,13 @@ function AdminLoginModal({ onClose }: { onClose: () => void }): JSX.Element {
         <button type="submit" className="btn-primary w-full" disabled={submitting}>
           {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
           {t('auth.signIn')}
+        </button>
+        <button
+          type="button"
+          onClick={() => setShowForgot(true)}
+          className="w-full text-center text-sm font-medium text-slate-500 hover:text-brand-600"
+        >
+          {t('auth.forgotPassword')}
         </button>
       </form>
     </Modal>

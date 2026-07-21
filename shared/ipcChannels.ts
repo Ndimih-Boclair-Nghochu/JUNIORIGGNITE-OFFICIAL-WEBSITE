@@ -16,6 +16,9 @@ export const IPC = {
   AUTH_LOGOUT: 'auth:logout',
   AUTH_CURRENT_SESSION: 'auth:currentSession',
   AUTH_CHANGE_ADMIN_PASSWORD: 'auth:changeAdminPassword',
+  AUTH_RECOVERY_QUESTION: 'auth:recoveryQuestion',
+  AUTH_RESET_PASSWORD: 'auth:resetPassword',
+  AUTH_SET_SECURITY_QUESTION: 'auth:setSecurityQuestion',
 
   // Landing
   LANDING_LIST_CLASSES: 'landing:listClasses',

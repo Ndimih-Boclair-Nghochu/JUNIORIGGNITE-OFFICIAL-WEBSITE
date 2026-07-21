@@ -23,7 +23,10 @@ const api = {
     logout: () => invoke(IPC.AUTH_LOGOUT),
     currentSession: () => invoke(IPC.AUTH_CURRENT_SESSION),
     changeAdminPassword: (payload: { currentPassword: string; newPassword: string }) =>
-      invoke(IPC.AUTH_CHANGE_ADMIN_PASSWORD, payload)
+      invoke(IPC.AUTH_CHANGE_ADMIN_PASSWORD, payload),
+    recoveryQuestion: (payload: unknown) => invoke(IPC.AUTH_RECOVERY_QUESTION, payload),
+    resetPassword: (payload: unknown) => invoke(IPC.AUTH_RESET_PASSWORD, payload),
+    setSecurityQuestion: (payload: unknown) => invoke(IPC.AUTH_SET_SECURITY_QUESTION, payload)
   },
   landing: {
     listClasses: () => invoke(IPC.LANDING_LIST_CLASSES)

@@ -47,6 +47,8 @@ export interface JuniorIgniteApi {
       logoPath: string | null
       adminUsername: string
       adminPassword: string
+      securityQuestion: string
+      securityAnswer: string
     }) => Promise<ApiResult<{ classCodes: Record<string, string> }>>
     integrityStatus: () => Promise<ApiResult<{ ok: boolean }>>
     quit: () => Promise<ApiResult<null>>
@@ -59,6 +61,17 @@ export interface JuniorIgniteApi {
     logout: () => Promise<ApiResult<null>>
     currentSession: () => Promise<ApiResult<Session>>
     changeAdminPassword: (payload: { currentPassword: string; newPassword: string }) => Promise<ApiResult<null>>
+    recoveryQuestion: (payload: { username: string }) => Promise<ApiResult<{ question: string | null }>>
+    resetPassword: (payload: {
+      username: string
+      answer: string
+      newPassword: string
+    }) => Promise<ApiResult<null>>
+    setSecurityQuestion: (payload: {
+      currentPassword: string
+      question: string
+      answer: string
+    }) => Promise<ApiResult<null>>
   }
   landing: {
     listClasses: () => Promise<ApiResult<SchoolClass[]>>
