@@ -31,6 +31,10 @@ interface FirstRunPayload {
   region: string
   division: string
   subdivision: string
+  poBox: string
+  villageTown: string
+  aboutText: string
+  principalName: string
   language: Language
   logoPath: string | null
   adminUsername: string
@@ -153,12 +157,16 @@ export function registerAppHandlers(): void {
 
         const setup = db.transaction(() => {
           db.prepare(
-            `INSERT INTO schools (id, name, logo_path, motto, address, phone, email, region, division, subdivision, language, setup_complete, device_id)
-             VALUES (1, @name, @logoPath, @motto, @address, @phone, @email, @region, @division, @subdivision, @language, 1, @deviceId)
+            `INSERT INTO schools (id, name, logo_path, motto, address, phone, email, region, division, subdivision,
+                                  po_box, village_town, about_text, principal_name, language, setup_complete, device_id)
+             VALUES (1, @name, @logoPath, @motto, @address, @phone, @email, @region, @division, @subdivision,
+                     @poBox, @villageTown, @aboutText, @principalName, @language, 1, @deviceId)
              ON CONFLICT(id) DO UPDATE SET
                name=excluded.name, logo_path=excluded.logo_path, motto=excluded.motto, address=excluded.address,
                phone=excluded.phone, email=excluded.email, region=excluded.region, division=excluded.division,
-               subdivision=excluded.subdivision, language=excluded.language, setup_complete=1`
+               subdivision=excluded.subdivision, po_box=excluded.po_box, village_town=excluded.village_town,
+               about_text=excluded.about_text, principal_name=excluded.principal_name,
+               language=excluded.language, setup_complete=1`
           ).run({
             name: payload.name,
             logoPath: payload.logoPath,
@@ -169,6 +177,12 @@ export function registerAppHandlers(): void {
             region: payload.region,
             division: payload.division,
             subdivision: payload.subdivision,
+            // Captured at setup so report cards, receipts and student profiles
+            // print complete school details from day one.
+            poBox: payload.poBox?.trim() || null,
+            villageTown: payload.villageTown?.trim() || null,
+            aboutText: payload.aboutText?.trim() || null,
+            principalName: payload.principalName?.trim() || null,
             language: payload.language,
             deviceId
           })

@@ -20,6 +20,10 @@ interface FormState {
   division: string
   subdivision: string
   language: Language
+  poBox: string
+  villageTown: string
+  aboutText: string
+  principalName: string
   adminUsername: string
   adminPassword: string
   adminPasswordConfirm: string
@@ -47,6 +51,10 @@ const initialForm: FormState = {
   division: '',
   subdivision: '',
   language: 'en',
+  poBox: '',
+  villageTown: '',
+  aboutText: '',
+  principalName: '',
   adminUsername: '',
   adminPassword: '',
   adminPasswordConfirm: '',
@@ -132,6 +140,10 @@ export default function SetupWizard(): JSX.Element {
       region: form.region,
       division: form.division,
       subdivision: form.subdivision,
+      poBox: form.poBox,
+      villageTown: form.villageTown,
+      aboutText: form.aboutText,
+      principalName: form.principalName,
       language: form.language,
       logoPath: form.logoPath,
       adminUsername: form.adminUsername,
@@ -297,6 +309,48 @@ export default function SetupWizard(): JSX.Element {
                   />
                 </div>
               </div>
+
+              {/* Printed on report cards, receipts and student profiles — collected
+                  here so those documents are complete from the very first print. */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="label-field">
+                    {t('setup.villageTown')} <span className="font-normal text-slate-400">({t('common.optional')})</span>
+                  </label>
+                  <input
+                    className="input-field"
+                    value={form.villageTown}
+                    onChange={(e) => update('villageTown', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="label-field">
+                    {t('setup.poBox')} <span className="font-normal text-slate-400">({t('common.optional')})</span>
+                  </label>
+                  <input className="input-field" value={form.poBox} onChange={(e) => update('poBox', e.target.value)} />
+                </div>
+              </div>
+              <div>
+                <label className="label-field">{t('setup.principalName')}</label>
+                <input
+                  className="input-field"
+                  value={form.principalName}
+                  onChange={(e) => update('principalName', e.target.value)}
+                />
+                <p className="mt-1 text-xs text-slate-500">{t('setup.principalHint')}</p>
+              </div>
+              <div>
+                <label className="label-field">
+                  {t('setup.aboutText')} <span className="font-normal text-slate-400">({t('common.optional')})</span>
+                </label>
+                <textarea
+                  className="input-field min-h-[80px] resize-y"
+                  value={form.aboutText}
+                  onChange={(e) => update('aboutText', e.target.value)}
+                  placeholder={t('setup.aboutPlaceholder')}
+                />
+              </div>
+
               <div>
                 <label className="label-field">{t('setup.language')}</label>
                 <select

@@ -121,6 +121,15 @@ export default function SettingsPage(): JSX.Element {
           </div>
         </div>
         <div>
+          <label className="label-field">About the school</label>
+          <textarea
+            className="input-field min-h-[80px] resize-y"
+            placeholder="A short description printed on the student profile cover."
+            value={school.aboutText ?? ''}
+            onChange={(e) => update('aboutText', e.target.value)}
+          />
+        </div>
+        <div>
           <label className="label-field">Promotion average (out of 20)</label>
           <input
             type="number"

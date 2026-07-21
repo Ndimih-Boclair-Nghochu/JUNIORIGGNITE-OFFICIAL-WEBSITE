@@ -43,6 +43,10 @@ export interface JuniorIgniteApi {
       region: string
       division: string
       subdivision: string
+      poBox: string
+      villageTown: string
+      aboutText: string
+      principalName: string
       language: Language
       logoPath: string | null
       adminUsername: string
