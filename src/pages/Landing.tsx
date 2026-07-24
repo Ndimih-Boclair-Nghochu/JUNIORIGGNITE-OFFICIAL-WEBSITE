@@ -1,24 +1,27 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { ArrowRight } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { useTypewriter } from '@/lib/useTypewriter'
 
 /**
- * The website's front door: a calm, full-screen pure-green landing that shows
- * only the mark and the platform name (typed on), then invites the visitor in.
- * Deliberately minimal — no marketing copy competing for attention.
+ * The website's front door: a calm, full-screen pure-green intro showing only
+ * the mark and the platform name (typed on), then it moves the visitor into the
+ * site automatically — no button to click.
  */
 export default function Landing(): JSX.Element {
-  const { shown, done } = useTypewriter('JuniorIgnite', { speed: 115, startDelay: 500 })
-  const [enter, setEnter] = useState(false)
+  const navigate = useNavigate()
+  const { shown, done } = useTypewriter('JuniorIgnite', { speed: 110, startDelay: 450 })
+  const [reveal, setReveal] = useState(false)
 
-  // Reveal the tagline + button a beat after the name finishes.
+  // Reveal the tagline a beat after the name finishes, then glide into the site.
   useEffect(() => {
-    if (done) {
-      const t = setTimeout(() => setEnter(true), 350)
-      return () => clearTimeout(t)
+    if (!done) return
+    const show = setTimeout(() => setReveal(true), 300)
+    const go = setTimeout(() => navigate('/home'), 1600)
+    return () => {
+      clearTimeout(show)
+      clearTimeout(go)
     }
-  }, [done])
+  }, [done, navigate])
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-brand-600 px-6 text-center text-white">
@@ -38,32 +41,24 @@ export default function Landing(): JSX.Element {
         {/* Typed platform name */}
         <h1
           className={
-            'font-display text-5xl font-extrabold tracking-tightest sm:text-6xl md:text-7xl ' +
-            (done ? '' : 'caret')
+            'font-display text-5xl font-extrabold tracking-tightest sm:text-6xl md:text-7xl ' + (done ? '' : 'caret')
           }
         >
           {shown}
         </h1>
 
-        {/* Minimal follow-on — fades in only after typing completes */}
-        <div
-          className="mt-6 flex flex-col items-center gap-8 transition-all duration-700"
-          style={{ opacity: enter ? 1 : 0, transform: enter ? 'translateY(0)' : 'translateY(16px)' }}
+        {/* Tagline — fades in after typing, just before the redirect */}
+        <p
+          className="mt-6 text-base font-medium tracking-wide text-brand-50/90 transition-all duration-700 sm:text-lg"
+          style={{ opacity: reveal ? 1 : 0, transform: reveal ? 'translateY(0)' : 'translateY(12px)' }}
         >
-          <p className="text-base font-medium tracking-wide text-brand-50/90 sm:text-lg">Igniting Young Minds</p>
-          <Link
-            to="/home"
-            className="group inline-flex items-center gap-2 rounded-full bg-white px-8 py-3.5 text-[0.95rem] font-semibold text-brand-700 shadow-2xl transition hover:-translate-y-0.5 hover:bg-brand-50"
-          >
-            Enter
-            <ArrowRight className="h-4 w-4 transition group-hover:translate-x-1" />
-          </Link>
-        </div>
+          Igniting Young Minds
+        </p>
       </div>
 
       <div
         className="absolute bottom-7 text-xs font-medium uppercase tracking-[0.25em] text-white/45 transition-opacity duration-700"
-        style={{ opacity: enter ? 1 : 0 }}
+        style={{ opacity: reveal ? 1 : 0 }}
       >
         Offline School Management · Cameroon
       </div>
