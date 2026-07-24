@@ -181,25 +181,21 @@ export async function generateReportCard(
   y -= 44
 
   // ============================== school identity =============================
-  // The school's own logo sits to the left of its name. Space is reserved on both
-  // sides so the (page-centred) name can never run under the logo.
+  // The school's own logo is centred directly above its name.
   const schoolName = String(school?.name ?? 'School').toUpperCase()
-  const LOGO_SIZE = 46
-  const nameMaxW = CW - (logo ? (LOGO_SIZE + 12) * 2 : 0)
-  let nameSize = 15
-  while (w(schoolName, nameSize, bold) > nameMaxW && nameSize > 9) nameSize -= 0.5
-  const nameLines = wrap(schoolName, nameMaxW, nameSize, bold)
-
-  const nameTop = y
-  for (const line of nameLines) {
-    center(line, width / 2, y, nameSize, bold, INK)
-    y -= nameSize + 3
+  if (logo) {
+    const d = logo.scaleToFit(44, 44) // aspect preserved — never stretched
+    page.drawImage(logo, { x: width / 2 - d.width / 2, y: y - d.height, width: d.width, height: d.height })
+    y -= d.height + 8
   }
 
-  if (logo) {
-    const d = logo.scaleToFit(LOGO_SIZE, LOGO_SIZE) // aspect preserved — never stretched
-    const blockCentre = nameTop + nameSize / 2 - ((nameLines.length - 1) * (nameSize + 3)) / 2
-    page.drawImage(logo, { x: M, y: blockCentre - d.height / 2, width: d.width, height: d.height })
+  // With the logo above the name, the name can use the full content width.
+  const nameMaxW = CW
+  let nameSize = 15
+  while (w(schoolName, nameSize, bold) > nameMaxW && nameSize > 9) nameSize -= 0.5
+  for (const line of wrap(schoolName, nameMaxW, nameSize, bold)) {
+    center(line, width / 2, y, nameSize, bold, INK)
+    y -= nameSize + 3
   }
 
   y -= 2
