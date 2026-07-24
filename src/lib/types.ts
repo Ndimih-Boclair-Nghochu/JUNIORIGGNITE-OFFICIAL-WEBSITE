@@ -15,7 +15,9 @@ export interface SchoolRow {
   activeUsers: number
   status: 'active' | 'suspended'
   reportCardsAllowed: boolean
+  licenseCode: string | null
   licenseExpiresAt: string | null
+  licenseIssuedAt: string | null
   lastSeenAt: string | null
   createdAt: string
 }
@@ -46,20 +48,16 @@ export interface PublicStatsInput {
   updatedAt: string | null
 }
 
-/**
- * A record of a licence issued to one school. The signing key stays offline, so
- * `code` is generated with tools/license-gen and pasted back here for the record.
- */
-export interface LicenseRow {
+/** A team member shown on the public About page once published. */
+export interface TeamMember {
   id: number
-  schoolName: string
-  schoolId: string
-  deviceId: string
-  code: string | null
-  expiresAt: string | null
+  name: string
+  role: string
+  bio: string
+  photo: string
+  order: number
+  published: boolean
   createdAt: string
-  issuedAt: string | null
-  notes: string | null
 }
 
 export interface ContactMsg {
@@ -80,5 +78,6 @@ export interface SiteSettings {
   eligniteUrl: string
   youtube: string
   facebook: string
+  videoUrl: string
   updatedAt: string | null
 }

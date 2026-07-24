@@ -21,7 +21,7 @@ import {
 import { DownloadButton } from '@/components/DownloadButton'
 import { SectionHeader } from '@/components/SectionHeader'
 import { Reveal } from '@/components/Reveal'
-import { api } from '@/lib/api'
+import { api, youtubeEmbedId } from '@/lib/api'
 import { SITE } from '@/lib/config'
 import { useT } from '@/lib/i18n'
 import type { PublicStats } from '@/lib/types'
@@ -48,9 +48,19 @@ const STEPS = [
 export default function Home(): JSX.Element {
   const { t } = useT()
   const [stats, setStats] = useState<PublicStats | null>(null)
+  // The guide video is set by the founder in the console; fall back to the
+  // built-in default only if none has been configured.
+  const [videoId, setVideoId] = useState<string>(SITE.youtubeId)
 
   useEffect(() => {
     api.publicStats().then(setStats).catch(() => {})
+    api
+      .siteSettings()
+      .then((s) => {
+        const id = youtubeEmbedId(s.videoUrl)
+        if (id) setVideoId(id)
+      })
+      .catch(() => {})
   }, [])
 
   const fmt = (n: number): string => n.toLocaleString('en-US')
@@ -196,7 +206,7 @@ export default function Home(): JSX.Element {
               <div className="relative w-full" style={{ paddingTop: '56.25%' }}>
                 <iframe
                   className="absolute inset-0 h-full w-full"
-                  src={`https://www.youtube-nocookie.com/embed/${SITE.youtubeId}`}
+                  src={`https://www.youtube-nocookie.com/embed/${videoId}`}
                   title={`${SITE.name} setup guide`}
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen

@@ -12,6 +12,7 @@ const FALLBACK: SiteSettings = {
   eligniteUrl: 'https://elignite.com',
   youtube: SITE.social.youtube,
   facebook: SITE.social.facebook,
+  videoUrl: '',
   updatedAt: null
 }
 

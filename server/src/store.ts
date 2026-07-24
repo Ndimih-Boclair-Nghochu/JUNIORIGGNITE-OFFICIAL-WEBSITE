@@ -14,7 +14,10 @@ export interface SchoolRow {
   activeUsers: number
   status: 'active' | 'suspended'
   reportCardsAllowed: boolean
+  /** Licence is issued automatically the moment a school registers. */
+  licenseCode: string | null
   licenseExpiresAt: string | null
+  licenseIssuedAt: string | null
   lastSeenAt: string | null
   createdAt: string
 }
@@ -41,21 +44,19 @@ export interface PublicStatsRow {
 }
 
 /**
- * A licence issued to one school. The Ed25519 private key never touches this
- * server — the founder records the school's School ID + Device ID here, runs
- * tools/license-gen offline, and pastes the signed code back for record-keeping.
+ * A member of the team, shown on the public About page once published. Managed
+ * entirely from the founder console.
  */
-export interface LicenseRow {
+export interface TeamMember {
   id: number
-  schoolName: string
-  schoolId: string
-  deviceId: string
-  /** The signed activation code, once generated offline. Null until issued. */
-  code: string | null
-  expiresAt: string | null
+  name: string
+  role: string
+  bio: string
+  /** Small image as a data URL (resized client-side) or an external URL. */
+  photo: string
+  order: number
+  published: boolean
   createdAt: string
-  issuedAt: string | null
-  notes: string | null
 }
 
 /**
@@ -71,6 +72,8 @@ export interface SiteSettings {
   eligniteUrl: string
   youtube: string
   facebook: string
+  /** The setup-guide video shown on the home page (full YouTube URL or id). */
+  videoUrl: string
   updatedAt: string | null
 }
 
@@ -82,6 +85,7 @@ export const DEFAULT_SITE_SETTINGS: SiteSettings = {
   eligniteUrl: 'https://elignite.com',
   youtube: '',
   facebook: '',
+  videoUrl: '',
   updatedAt: null
 }
 
@@ -90,7 +94,7 @@ interface DB {
   downloadEvents: { ts: string }[]
   schools: SchoolRow[]
   contacts: ContactMsg[]
-  licenses: LicenseRow[]
+  team: TeamMember[]
   stats: PublicStatsRow
   site: SiteSettings
   founder: { email: string; salt: string; hash: string }
@@ -126,7 +130,7 @@ function seed(): DB {
     downloadEvents: [],
     schools: [],
     contacts: [],
-    licenses: [],
+    team: [],
     stats: { schools: 0, students: 0, activeUsers: 0, updatedAt: null },
     site: { ...DEFAULT_SITE_SETTINGS },
     founder: { email, salt, hash },
@@ -140,12 +144,19 @@ export function load(): void {
     db = JSON.parse(fs.readFileSync(DB_FILE, 'utf8'))
     // Backfill fields added after this database was first written, so an
     // existing deployment keeps working without manual intervention.
-    db.licenses ??= []
+    db.team ??= []
     db.stats ??= { schools: 0, students: 0, activeUsers: 0, updatedAt: null }
     db.site = { ...DEFAULT_SITE_SETTINGS, ...(db.site ?? {}) }
     db.contacts ??= []
     db.schools ??= []
     db.downloadEvents ??= []
+    // Schools created before automatic licensing lack these fields.
+    for (const s of db.schools) {
+      s.licenseCode ??= null
+      s.licenseIssuedAt ??= null
+    }
+    // The manual licences collection has been removed; drop it if present.
+    delete (db as unknown as Record<string, unknown>).licenses
   } else {
     db = seed()
     save()
@@ -161,9 +172,8 @@ export function resetData(): void {
   db.downloadEvents = []
   db.schools = []
   db.contacts = []
-  db.licenses = []
   db.stats = { schools: 0, students: 0, activeUsers: 0, updatedAt: null }
-  db.seq = 1  // site settings are configuration, not data — deliberately kept
+  db.seq = 1  // site settings and team are content, not data — deliberately kept
   save()
 }
 

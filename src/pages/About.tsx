@@ -3,6 +3,7 @@ import { Target, HeartHandshake, WifiOff, ShieldCheck, Languages, Coins, Graduat
 import { SectionHeader } from '@/components/SectionHeader'
 import { Reveal } from '@/components/Reveal'
 import { DownloadButton } from '@/components/DownloadButton'
+import { TeamSection } from '@/components/TeamSection'
 import { SITE } from '@/lib/config'
 
 const VALUES = [
@@ -112,6 +113,9 @@ export default function About(): JSX.Element {
           ))}
         </div>
       </section>
+
+      {/* Team — only renders if the founder has published members */}
+      <TeamSection />
 
       {/* CTA */}
       <section className="py-20">

@@ -1,7 +1,7 @@
 import express, { type Request, type Response, type NextFunction } from 'express'
 import cors from 'cors'
-import { load, save, get, nextId, downloadsByDay, resetData, type SchoolRow, type LicenseRow } from './store.js'
-import { signToken, verifyToken, verifyPassword } from './auth.js'
+import { load, save, get, nextId, downloadsByDay, resetData, type SchoolRow, type TeamMember } from './store.js'
+import { signToken, verifyToken, verifyPassword, signLicense } from './auth.js'
 
 load()
 
@@ -50,6 +50,16 @@ function requireTelemetryKey(req: Request, res: Response, next: NextFunction): v
 const clean = (v: unknown, max: number): string => String(v ?? '').trim().slice(0, max)
 const INSTALLER_URL = process.env.INSTALLER_URL ?? '/downloads/JuniorIgnite-Setup-1.1.2.exe'
 const APP_VERSION = process.env.APP_VERSION ?? '1.1.2'
+/** How long an automatically-issued school licence lasts. */
+const LICENSE_YEARS = 1
+
+/** Issues (or renews) a school's licence: sets the expiry and signs a fresh code. */
+function issueLicense(school: SchoolRow): void {
+  const expires = new Date(Date.now() + LICENSE_YEARS * 365 * 86400000).toISOString()
+  school.licenseExpiresAt = expires
+  school.licenseCode = signLicense(school.key, expires)
+  school.licenseIssuedAt = new Date().toISOString()
+}
 
 /**
  * Headline numbers. Downloads are counted for real by this server; the school /
@@ -134,16 +144,27 @@ app.post('/api/telemetry/register', requireTelemetryKey, rateLimit(60, 60_000), 
       activeUsers: activeUsers ?? 1,
       status: 'active',
       reportCardsAllowed: true,
-      licenseExpiresAt: new Date(Date.now() + 365 * 86400000).toISOString(),
+      licenseCode: null,
+      licenseExpiresAt: null,
+      licenseIssuedAt: null,
       lastSeenAt: new Date().toISOString(),
       createdAt: new Date().toISOString()
     }
+    // A licence is issued automatically the instant a school registers — no
+    // manual step. The founder can re-issue later from the console.
+    issueLicense(school)
     db.schools.push(school)
   } else {
     Object.assign(school, { name, region, subdivision, lastSeenAt: new Date().toISOString() })
   }
   save()
-  res.json({ key: school.key, reportCardsAllowed: school.reportCardsAllowed, status: school.status })
+  res.json({
+    key: school.key,
+    reportCardsAllowed: school.reportCardsAllowed,
+    status: school.status,
+    licenseCode: school.licenseCode,
+    licenseExpiresAt: school.licenseExpiresAt
+  })
 })
 
 app.post('/api/telemetry/heartbeat', requireTelemetryKey, rateLimit(60, 60_000), (req, res) => {
@@ -240,63 +261,75 @@ app.put('/api/founder/site-settings', requireFounder, (req, res) => {
     eligniteUrl: keep(b.eligniteUrl, db.site.eligniteUrl, 300),
     youtube: keep(b.youtube, db.site.youtube, 300),
     facebook: keep(b.facebook, db.site.facebook, 300),
+    videoUrl: keep(b.videoUrl, db.site.videoUrl, 300),
     updatedAt: new Date().toISOString()
   }
   save()
   res.json(db.site)
 })
 
-// ---- Licence records ----
-// The Ed25519 private key is NOT on this server by design. The founder records
-// a school's identifiers here, generates the signed code offline with
-// tools/license-gen, then pastes it back so there is a record of what was issued.
-app.get('/api/founder/licenses', requireFounder, (_req, res) => {
-  res.json([...get().licenses].sort((a, b) => (b.createdAt > a.createdAt ? 1 : -1)))
+// ---- Automatic licences ----
+// Licences are issued automatically when a school registers. The founder never
+// fills anything in — they can only RE-ISSUE a licence for a school (e.g. when
+// the current one has expired), which extends the expiry and signs a new code.
+app.post('/api/founder/schools/:id/license', requireFounder, (req, res) => {
+  const school = get().schools.find((s) => s.id === Number(req.params.id))
+  if (!school) return res.status(404).json({ error: 'School not found' })
+  issueLicense(school)
+  save()
+  res.json(school as SchoolRow)
 })
 
-app.post('/api/founder/licenses', requireFounder, (req, res) => {
-  const schoolName = clean(req.body?.schoolName, 160)
-  const schoolId = clean(req.body?.schoolId, 64)
-  const deviceId = clean(req.body?.deviceId, 128)
-  if (!schoolName || !schoolId || !deviceId) {
-    return res.status(400).json({ error: 'School name, School ID and Device ID are all required.' })
-  }
+// ---- Team members (public About page) ----
+app.get('/api/team', (_req, res) => {
+  const team = get()
+    .team.filter((m) => m.published)
+    .sort((a, b) => a.order - b.order || a.id - b.id)
+  res.json(team)
+})
+
+app.get('/api/founder/team', requireFounder, (_req, res) => {
+  res.json([...get().team].sort((a, b) => a.order - b.order || a.id - b.id))
+})
+
+app.post('/api/founder/team', requireFounder, (req, res) => {
+  const name = clean(req.body?.name, 120)
+  if (!name) return res.status(400).json({ error: 'A name is required.' })
   const db = get()
-  const row: LicenseRow = {
+  const member: TeamMember = {
     id: nextId(),
-    schoolName,
-    schoolId,
-    deviceId,
-    code: null,
-    expiresAt: clean(req.body?.expiresAt, 40) || null,
-    createdAt: new Date().toISOString(),
-    issuedAt: null,
-    notes: clean(req.body?.notes, 500) || null
+    name,
+    role: clean(req.body?.role, 120),
+    bio: clean(req.body?.bio, 1000),
+    photo: clean(req.body?.photo, 800_000), // data URLs allowed (resized client-side)
+    order: Number.isFinite(Number(req.body?.order)) ? Number(req.body.order) : db.team.length,
+    published: req.body?.published === true,
+    createdAt: new Date().toISOString()
   }
-  db.licenses.push(row)
+  db.team.push(member)
   save()
-  res.json(row)
+  res.json(member)
 })
 
-app.patch('/api/founder/licenses/:id', requireFounder, (req, res) => {
-  const row = get().licenses.find((l) => l.id === Number(req.params.id))
-  if (!row) return res.status(404).json({ error: 'Licence record not found' })
-  if (req.body?.code !== undefined) {
-    const code = clean(req.body.code, 2000)
-    row.code = code || null
-    row.issuedAt = code ? new Date().toISOString() : null
-  }
-  if (req.body?.expiresAt !== undefined) row.expiresAt = clean(req.body.expiresAt, 40) || null
-  if (req.body?.notes !== undefined) row.notes = clean(req.body.notes, 500) || null
+app.patch('/api/founder/team/:id', requireFounder, (req, res) => {
+  const m = get().team.find((x) => x.id === Number(req.params.id))
+  if (!m) return res.status(404).json({ error: 'Team member not found' })
+  const b = req.body ?? {}
+  if (b.name !== undefined) m.name = clean(b.name, 120)
+  if (b.role !== undefined) m.role = clean(b.role, 120)
+  if (b.bio !== undefined) m.bio = clean(b.bio, 1000)
+  if (b.photo !== undefined) m.photo = clean(b.photo, 800_000)
+  if (b.order !== undefined && Number.isFinite(Number(b.order))) m.order = Number(b.order)
+  if (typeof b.published === 'boolean') m.published = b.published
   save()
-  res.json(row)
+  res.json(m)
 })
 
-app.delete('/api/founder/licenses/:id', requireFounder, (req, res) => {
+app.delete('/api/founder/team/:id', requireFounder, (req, res) => {
   const db = get()
-  const i = db.licenses.findIndex((l) => l.id === Number(req.params.id))
-  if (i === -1) return res.status(404).json({ error: 'Licence record not found' })
-  db.licenses.splice(i, 1)
+  const i = db.team.findIndex((x) => x.id === Number(req.params.id))
+  if (i === -1) return res.status(404).json({ error: 'Team member not found' })
+  db.team.splice(i, 1)
   save()
   res.json({ ok: true })
 })

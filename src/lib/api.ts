@@ -6,7 +6,7 @@ import type {
   PublicStats,
   SchoolRow,
   PublicStatsInput,
-  LicenseRow,
+  TeamMember,
   ContactMsg,
   SiteSettings
 } from './types'
@@ -113,34 +113,51 @@ export const api = {
     }
   },
 
+  /** Re-issues a school's licence (extends expiry + new signed code). */
+  renewLicense: (id: number): Promise<SchoolRow> =>
+    req<SchoolRow>(`/api/founder/schools/${id}/license`, { method: 'POST' }),
+
   // ---- Founder-entered public statistics ----
   founderStats: (): Promise<PublicStatsInput> => req<PublicStatsInput>('/api/founder/stats'),
 
   saveFounderStats: (stats: { schools: number; students: number; activeUsers: number }): Promise<PublicStatsInput> =>
     req<PublicStatsInput>('/api/founder/stats', { method: 'PUT', body: JSON.stringify(stats) }),
 
-  // ---- Licence records (signing key stays offline) ----
-  licenses: (): Promise<LicenseRow[]> => req<LicenseRow[]>('/api/founder/licenses'),
-
-  createLicense: (payload: {
-    schoolName: string
-    schoolId: string
-    deviceId: string
-    expiresAt?: string
-    notes?: string
-  }): Promise<LicenseRow> => req<LicenseRow>('/api/founder/licenses', { method: 'POST', body: JSON.stringify(payload) }),
-
-  updateLicense: (id: number, patch: { code?: string; expiresAt?: string; notes?: string }): Promise<LicenseRow> =>
-    req<LicenseRow>(`/api/founder/licenses/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
-
-  deleteLicense: (id: number): Promise<{ ok: true }> =>
-    req<{ ok: true }>(`/api/founder/licenses/${id}`, { method: 'DELETE' }),
-
   contacts: (): Promise<ContactMsg[]> => req<ContactMsg[]>('/api/founder/contacts'),
+
+  // ---- Team (public read of published, founder full CRUD) ----
+  team: (): Promise<TeamMember[]> => req<TeamMember[]>('/api/team'),
+  founderTeam: (): Promise<TeamMember[]> => req<TeamMember[]>('/api/founder/team'),
+  saveTeamMember: (member: Partial<TeamMember>): Promise<TeamMember> =>
+    member.id
+      ? req<TeamMember>(`/api/founder/team/${member.id}`, { method: 'PATCH', body: JSON.stringify(member) })
+      : req<TeamMember>('/api/founder/team', { method: 'POST', body: JSON.stringify(member) }),
+  deleteTeamMember: (id: number): Promise<{ ok: true }> =>
+    req<{ ok: true }>(`/api/founder/team/${id}`, { method: 'DELETE' }),
 
   // ---- Site settings (public read, founder write) ----
   siteSettings: (): Promise<SiteSettings> => req<SiteSettings>('/api/site-settings'),
 
   saveSiteSettings: (patch: Partial<SiteSettings>): Promise<SiteSettings> =>
     req<SiteSettings>('/api/founder/site-settings', { method: 'PUT', body: JSON.stringify(patch) })
+}
+
+/** Extracts a YouTube video id from any common URL form, or '' if none. */
+export function youtubeEmbedId(input: string): string {
+  const s = (input ?? '').trim()
+  if (!s) return ''
+  // Already a bare 11-char id
+  if (/^[A-Za-z0-9_-]{11}$/.test(s)) return s
+  const patterns = [
+    /[?&]v=([A-Za-z0-9_-]{11})/, // watch?v=ID
+    /youtu\.be\/([A-Za-z0-9_-]{11})/, // youtu.be/ID
+    /\/embed\/([A-Za-z0-9_-]{11})/, // /embed/ID
+    /\/shorts\/([A-Za-z0-9_-]{11})/, // /shorts/ID
+    /\/live\/([A-Za-z0-9_-]{11})/ // /live/ID
+  ]
+  for (const p of patterns) {
+    const m = s.match(p)
+    if (m) return m[1]
+  }
+  return ''
 }

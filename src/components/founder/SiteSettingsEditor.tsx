@@ -11,6 +11,7 @@ const BLANK: SiteSettings = {
   eligniteUrl: '',
   youtube: '',
   facebook: '',
+  videoUrl: '',
   updatedAt: null
 }
 
@@ -90,8 +91,16 @@ export function SiteSettingsEditor(): JSX.Element {
                 'Where "POWERED BY ELIGNITE" in the footer links to.'
               )}
             </div>
-            {field('YouTube URL', 'youtube', 'https://youtube.com/@…', 'Leave blank to hide the icon.')}
+            {field('YouTube channel URL', 'youtube', 'https://youtube.com/@…', 'Footer icon. Leave blank to hide.')}
             {field('Facebook URL', 'facebook', 'https://facebook.com/…', 'Leave blank to hide the icon.')}
+            <div className="sm:col-span-2">
+              {field(
+                'Home page guide video',
+                'videoUrl',
+                'https://youtu.be/… or a video ID',
+                'The YouTube video embedded in the "Watch & learn" section of the home page.'
+              )}
+            </div>
           </div>
 
           <div className="mt-5 flex flex-wrap items-center gap-3">
