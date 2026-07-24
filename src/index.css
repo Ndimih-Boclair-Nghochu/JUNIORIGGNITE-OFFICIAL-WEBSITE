@@ -5,12 +5,25 @@
 @layer base {
   html {
     scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
   }
   body {
-    @apply bg-white text-ink antialiased;
+    @apply bg-white font-sans text-ink antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  /* Headings use the display face with tight, editorial tracking. */
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-display;
+    letter-spacing: -0.02em;
   }
   :target {
-    scroll-margin-top: 90px;
+    scroll-margin-top: 96px;
+  }
+  ::selection {
+    @apply bg-brand-600 text-white;
   }
 }
 
@@ -18,37 +31,76 @@
   .container-page {
     @apply mx-auto w-full max-w-7xl px-5 sm:px-8;
   }
+
+  /* ---- buttons ---- */
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-base font-semibold transition disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-[0.95rem] font-semibold tracking-tight transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-60;
   }
   .btn-primary {
-    @apply btn bg-brand-600 text-white shadow-lg shadow-brand-600/25 hover:-translate-y-0.5 hover:bg-brand-700 hover:shadow-xl hover:shadow-brand-600/30;
+    @apply btn bg-brand-600 text-white shadow-glow hover:-translate-y-0.5 hover:bg-brand-700;
   }
   .btn-accent {
-    @apply btn bg-accent-500 text-white shadow-lg shadow-accent-500/25 hover:-translate-y-0.5 hover:bg-accent-600;
+    @apply btn bg-accent-500 text-white shadow-lg shadow-accent-500/30 hover:-translate-y-0.5 hover:bg-accent-600;
   }
   .btn-ghost {
-    @apply btn border border-slate-200 bg-white text-ink-soft shadow-sm hover:-translate-y-0.5 hover:border-brand-300 hover:text-brand-700;
+    @apply btn border border-slate-200 bg-white/80 text-ink-soft shadow-soft backdrop-blur hover:-translate-y-0.5 hover:border-brand-300 hover:text-brand-700;
   }
+  .btn-light {
+    @apply btn bg-white text-brand-700 shadow-lg hover:-translate-y-0.5 hover:bg-brand-50;
+  }
+
+  /* ---- eyebrow / section label ---- */
   .eyebrow {
-    @apply inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-brand-600;
+    @apply inline-flex items-center gap-2 rounded-full border border-brand-100 bg-brand-50 px-3.5 py-1.5 text-[0.72rem] font-bold uppercase tracking-[0.16em] text-brand-700;
   }
+
+  /* ---- cards ---- */
   .card {
-    @apply rounded-2xl border border-slate-200 bg-white p-6 shadow-sm;
+    @apply rounded-3xl border border-slate-200/80 bg-white p-7 shadow-soft;
   }
+  .card-hover {
+    @apply card transition-all duration-300 hover:-translate-y-1.5 hover:border-brand-200 hover:shadow-lift;
+  }
+
+  /* ---- forms ---- */
   .input {
-    @apply w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-base text-ink placeholder:text-slate-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-100;
+    @apply w-full rounded-2xl border border-slate-200 bg-slate-50/60 px-4 py-3 text-base text-ink transition placeholder:text-slate-400 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-brand-100;
   }
   .label {
     @apply mb-1.5 block text-sm font-semibold text-ink-soft;
   }
+
+  /* ---- decorative ---- */
+  .grid-bg {
+    background-image: linear-gradient(rgba(15, 23, 42, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(15, 23, 42, 0.04) 1px, transparent 1px);
+    background-size: 44px 44px;
+    -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, #000 40%, transparent 100%);
+    mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, #000 40%, transparent 100%);
+  }
+  .text-gradient {
+    @apply bg-gradient-to-r from-brand-600 to-accent-500 bg-clip-text text-transparent;
+  }
+}
+
+@layer utilities {
+  /* Blinking caret for the typewriter on the landing page. */
+  .caret::after {
+    content: '';
+    @apply ml-1 inline-block h-[0.9em] w-[3px] translate-y-[0.08em] rounded-full bg-current align-middle;
+    animation: blink 1s step-end infinite;
+  }
+  .balance {
+    text-wrap: balance;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .animate-float,
-  .animate-orb-a,
-  .animate-orb-b,
-  .animate-fade-up {
-    animation: none !important;
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
   }
 }

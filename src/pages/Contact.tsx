@@ -36,18 +36,19 @@ export default function Contact(): JSX.Element {
 
   return (
     <>
-      <section className="relative overflow-hidden">
+      <section className="relative overflow-hidden bg-gradient-to-b from-brand-50/50 to-white">
+        <div className="grid-bg pointer-events-none absolute inset-0" />
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <div className="animate-orb-a absolute -left-40 -top-32 h-[26rem] w-[26rem] rounded-full bg-brand-300/30 blur-3xl" />
           <div className="animate-orb-b absolute -right-40 top-10 h-[24rem] w-[24rem] rounded-full bg-accent-300/25 blur-3xl" />
         </div>
-        <div className="container-page relative py-16 text-center">
+        <div className="container-page relative py-20 text-center">
           <Reveal className="mx-auto max-w-2xl">
-            <span className="eyebrow"><Sparkles className="h-4 w-4 text-accent-500" /> Contact us</span>
-            <h1 className="mt-4 text-4xl font-extrabold tracking-tight text-ink sm:text-5xl">
+            <span className="eyebrow"><Sparkles className="h-3.5 w-3.5 text-accent-500" /> Contact us</span>
+            <h1 className="mt-5 text-display-sm font-extrabold text-ink balance sm:text-display">
               We&apos;d love to help your school
             </h1>
-            <p className="mt-4 text-lg leading-relaxed text-ink-muted">
+            <p className="mt-5 text-lg leading-relaxed text-ink-muted">
               Questions about installing {SITE.name}, training your staff, or bringing it to your school?
               Send us a message and we&apos;ll get back to you.
             </p>

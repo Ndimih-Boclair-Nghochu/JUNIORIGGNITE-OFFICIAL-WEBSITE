@@ -42,10 +42,10 @@ export function Footer(): JSX.Element {
         <div>
           <h4 className="text-sm font-bold uppercase tracking-wider text-ink">{t('footer.explore')}</h4>
           <ul className="mt-4 space-y-2.5 text-sm text-ink-muted">
-            <li><Link to="/" className="hover:text-brand-700">{t('nav.home')}</Link></li>
+            <li><Link to="/home" className="hover:text-brand-700">{t('nav.home')}</Link></li>
             <li><Link to="/about" className="hover:text-brand-700">{t('nav.about')}</Link></li>
             <li><Link to="/contact" className="hover:text-brand-700">{t('nav.contact')}</Link></li>
-            <li><Link to="/#download" className="hover:text-brand-700">{t('nav.download')}</Link></li>
+            <li><Link to="/home#download" className="hover:text-brand-700">{t('nav.download')}</Link></li>
           </ul>
         </div>
 

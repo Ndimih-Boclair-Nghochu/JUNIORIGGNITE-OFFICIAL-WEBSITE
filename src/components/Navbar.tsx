@@ -12,7 +12,7 @@ export function Navbar(): JSX.Element {
   // The founder console is deliberately NOT linked here — it is reached only
   // through the © symbol in the footer.
   const links = [
-    { to: '/', label: t('nav.home') },
+    { to: '/home', label: t('nav.home') },
     { to: '/about', label: t('nav.about') },
     { to: '/contact', label: t('nav.contact') }
   ]
@@ -63,7 +63,7 @@ export function Navbar(): JSX.Element {
             {/* Shows the language you would switch TO. */}
             {lang === 'en' ? 'FR' : 'EN'}
           </button>
-          <Link to="/#download" className="btn-primary !py-2.5 text-sm">
+          <Link to="/home#download" className="btn-primary !py-2.5 text-sm">
             <Download className="h-4 w-4" />
             {t('nav.download')}
           </Link>
@@ -101,7 +101,7 @@ export function Navbar(): JSX.Element {
                 {l.label}
               </NavLink>
             ))}
-            <Link to="/#download" onClick={() => setOpen(false)} className="btn-primary mt-1">
+            <Link to="/home#download" onClick={() => setOpen(false)} className="btn-primary mt-1">
               <Download className="h-4 w-4" />
               {t('nav.downloadApp')}
             </Link>

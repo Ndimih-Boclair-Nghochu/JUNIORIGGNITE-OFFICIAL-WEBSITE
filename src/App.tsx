@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { Routes, Route, Outlet, useLocation, Navigate } from 'react-router-dom'
 import { Navbar } from './components/Navbar'
 import { Footer } from './components/Footer'
+import Landing from './pages/Landing'
 import Home from './pages/Home'
 import About from './pages/About'
 import Contact from './pages/Contact'
@@ -46,8 +47,10 @@ export default function App(): JSX.Element {
     <LanguageProvider>
       <ScrollManager />
       <Routes>
+        {/* Minimal pure-green front door (no navbar/footer). */}
+        <Route path="/" element={<Landing />} />
         <Route element={<PublicLayout />}>
-          <Route path="/" element={<Home />} />
+          <Route path="/home" element={<Home />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
         </Route>
