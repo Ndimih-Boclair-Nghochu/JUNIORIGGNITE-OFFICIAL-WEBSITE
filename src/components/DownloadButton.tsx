@@ -1,8 +1,11 @@
-import { useState } from 'react'
-import { Download, Loader2, Check } from 'lucide-react'
-import { api } from '@/lib/api'
+import { Link } from 'react-router-dom'
+import { Download } from 'lucide-react'
 
-/** Records the download on the backend, then starts the installer download. */
+/**
+ * Sends the visitor to the dedicated download page, where the download starts
+ * with a progress bar and the setup guide is offered alongside it. Kept as a
+ * component so every call site shares one look and one destination.
+ */
 export function DownloadButton({
   className = 'btn-primary text-base',
   label = 'Download for Windows',
@@ -12,36 +15,11 @@ export function DownloadButton({
   label?: string
   size?: string
 }): JSX.Element {
-  const [state, setState] = useState<'idle' | 'loading' | 'done'>('idle')
-
-  async function handle(): Promise<void> {
-    setState('loading')
-    try {
-      const { url } = await api.recordDownload()
-      const a = document.createElement('a')
-      a.href = url
-      a.setAttribute('download', '')
-      document.body.appendChild(a)
-      a.click()
-      a.remove()
-      setState('done')
-      setTimeout(() => setState('idle'), 2500)
-    } catch {
-      setState('idle')
-    }
-  }
-
   return (
-    <button onClick={handle} className={className} disabled={state === 'loading'}>
-      {state === 'loading' ? (
-        <Loader2 className="h-5 w-5 animate-spin" />
-      ) : state === 'done' ? (
-        <Check className="h-5 w-5" />
-      ) : (
-        <Download className="h-5 w-5" />
-      )}
-      {state === 'done' ? 'Starting download…' : label}
-      {size && state === 'idle' && <span className="opacity-70">· {size}</span>}
-    </button>
+    <Link to="/download" className={className}>
+      <Download className="h-5 w-5" />
+      {label}
+      {size && <span className="opacity-70">· {size}</span>}
+    </Link>
   )
 }

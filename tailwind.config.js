@@ -62,7 +62,8 @@ export default {
         'orb-b': { '0%,100%': { transform: 'translate(0,0) scale(1)' }, '50%': { transform: 'translate(-36px,28px) scale(1.1)' } },
         blink: { '0%,100%': { opacity: 1 }, '50%': { opacity: 0 } },
         'pulse-ring': { '0%': { transform: 'scale(0.9)', opacity: 0.6 }, '100%': { transform: 'scale(1.6)', opacity: 0 } },
-        marquee: { from: { transform: 'translateX(0)' }, to: { transform: 'translateX(-50%)' } }
+        marquee: { from: { transform: 'translateX(0)' }, to: { transform: 'translateX(-50%)' } },
+        indeterminate: { '0%': { transform: 'translateX(-120%)' }, '100%': { transform: 'translateX(340%)' } }
       },
       animation: {
         'fade-up': 'fade-up 0.7s cubic-bezier(0.22,1,0.36,1) both',
@@ -72,7 +73,8 @@ export default {
         'orb-b': 'orb-b 22s ease-in-out infinite',
         blink: 'blink 1s step-end infinite',
         'pulse-ring': 'pulse-ring 2.4s ease-out infinite',
-        marquee: 'marquee 30s linear infinite'
+        marquee: 'marquee 30s linear infinite',
+        indeterminate: 'indeterminate 1.3s ease-in-out infinite'
       }
     }
   },

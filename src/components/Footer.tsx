@@ -45,7 +45,7 @@ export function Footer(): JSX.Element {
             <li><Link to="/home" className="hover:text-brand-700">{t('nav.home')}</Link></li>
             <li><Link to="/about" className="hover:text-brand-700">{t('nav.about')}</Link></li>
             <li><Link to="/contact" className="hover:text-brand-700">{t('nav.contact')}</Link></li>
-            <li><Link to="/home#download" className="hover:text-brand-700">{t('nav.download')}</Link></li>
+            <li><Link to="/download" className="hover:text-brand-700">{t('nav.download')}</Link></li>
           </ul>
         </div>
 

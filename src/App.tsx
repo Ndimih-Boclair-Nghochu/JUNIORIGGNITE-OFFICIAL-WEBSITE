@@ -6,6 +6,7 @@ import Landing from './pages/Landing'
 import Home from './pages/Home'
 import About from './pages/About'
 import Contact from './pages/Contact'
+import Download from './pages/Download'
 import FounderLogin from './pages/FounderLogin'
 import FounderDashboard from './pages/FounderDashboard'
 import { api } from './lib/api'
@@ -53,6 +54,7 @@ export default function App(): JSX.Element {
           <Route path="/home" element={<Home />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/download" element={<Download />} />
         </Route>
         <Route path="/founder" element={<FounderLogin />} />
         <Route

@@ -63,7 +63,7 @@ export function Navbar(): JSX.Element {
             {/* Shows the language you would switch TO. */}
             {lang === 'en' ? 'FR' : 'EN'}
           </button>
-          <Link to="/home#download" className="btn-primary !py-2.5 text-sm">
+          <Link to="/download" className="btn-primary !py-2.5 text-sm">
             <Download className="h-4 w-4" />
             {t('nav.download')}
           </Link>
@@ -101,7 +101,7 @@ export function Navbar(): JSX.Element {
                 {l.label}
               </NavLink>
             ))}
-            <Link to="/home#download" onClick={() => setOpen(false)} className="btn-primary mt-1">
+            <Link to="/download" onClick={() => setOpen(false)} className="btn-primary mt-1">
               <Download className="h-4 w-4" />
               {t('nav.downloadApp')}
             </Link>
