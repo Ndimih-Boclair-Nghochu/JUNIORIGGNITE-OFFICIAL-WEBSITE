@@ -1,3 +1,4 @@
+import crypto from 'node:crypto'
 import express, { type Request, type Response, type NextFunction } from 'express'
 import cors from 'cors'
 import { load, save, get, nextId, downloadsByDay, resetData, type SchoolRow, type TeamMember } from './store.js'
@@ -359,7 +360,10 @@ app.patch('/api/founder/schools/:id', requireFounder, (req, res) => {
 })
 
 function cryptoRandom(): string {
-  return 'sch_' + Math.random().toString(36).slice(2, 12)
+  // A school's key is its telemetry identity — anyone who can guess it could
+  // read or overwrite that school's stats via the telemetry endpoints. Math.random
+  // is predictable, so use a cryptographically secure value instead.
+  return 'sch_' + crypto.randomBytes(16).toString('hex')
 }
 
 app.listen(PORT, () => {
